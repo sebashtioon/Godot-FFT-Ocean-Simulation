@@ -120,11 +120,11 @@ shadow_opacity = 0.8
 shadow_blur = 5.0
 
 [node name="Camera" type="Camera3D" parent="."]
-transform = Transform3D(-0.992966, -0.071409, 0.094447, 3.72529e-09, 0.797668, 0.603097, -0.118404, 0.598854, -0.792057, 1.35044, 10.8978, -31.7831)
+transform = Transform3D(-0.992966, -0.013804, 0.117596, -2.32831e-10, 0.993181, 0.116584, -0.118404, 0.115764, -0.986195, 1.35044, 10.8978, -31.7831)
 script = ExtResource("4_v2yip")
 
 [node name="Water" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, -25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, 0, -25)
 sorting_offset = 999.0
 material_override = ExtResource("5_lt75t")
 cast_shadow = 0

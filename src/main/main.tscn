@@ -135,7 +135,7 @@ water_color = Color(0.0702554, 0.14344, 0.200377, 1)
 foam_color = Color(0.733086, 0.700799, 0.656594, 1)
 parameters = Array[ExtResource("2_pw5n6")]([SubResource("Resource_adqv5"), SubResource("Resource_luhq0"), SubResource("Resource_83u3u")])
 
-[node name="WaterSprayEmitter" type="GPUParticles3D" parent="water"]
+[node name="watersprayemitter" type="GPUParticles3D" parent="water"]
 transform = Transform3D(15, 0, 0, 0, 15, 0, 0, 0, 15, 0, 0, 0)
 material_override = SubResource("ShaderMaterial_ds3o1")
 cast_shadow = 0
@@ -144,6 +144,6 @@ lifetime = 6.0
 process_material = ExtResource("9_skbf4")
 draw_pass_1 = SubResource("QuadMesh_06d3e")
 
-[node name="FogVolume" type="FogVolume" parent="."]
+[node name="fog" type="FogVolume" parent="."]
 shape = 4
 material = SubResource("FogMaterial_riff4")

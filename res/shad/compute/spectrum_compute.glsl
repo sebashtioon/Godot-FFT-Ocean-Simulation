@@ -1,12 +1,5 @@
 #[compute]
 #version 460
-/**
- * Generates a 2D texture representing the JONSWAP wave spectra
- * w/ Hasselmann directional spreading.
- *
- * Sources: Jerry Tessendorf - Simulating Ocean Water
- *          Christopher J. Horvath - Empirical Directional Wave Spectra for Computer Graphics
- */
 
 #define PI (3.141592653589793)
 #define G  (9.81)

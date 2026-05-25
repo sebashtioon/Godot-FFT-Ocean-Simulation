@@ -1,0 +1,10 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=4 uid="uid://byumtcccq4ew3"]
+
+[ext_resource type="Shader" path="res://res/shad/spatial/water.gdshader" id="1_uffek"]
+
+[resource]
+render_priority = 1
+shader = ExtResource("1_uffek")
+shader_parameter/roughness = 1.0
+shader_parameter/normal_strength = 1.0
+shader_parameter/map_scales = PackedVector4Array(0.0113636, 0.0113636, 0.845, 1, 0.0175439, 0.0175439, 0.724, 1, 0.0625, 0.0625, 0.662, 0.25)

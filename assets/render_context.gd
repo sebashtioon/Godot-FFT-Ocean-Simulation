@@ -8,10 +8,11 @@ class DeletionQueue:
 		return rid
 
 	func flush(device : RenderingDevice) -> void:
-		# We work backwards in order of allocation when freeing resources
 		for i in range(queue.size() - 1, -1, -1):
-			if not queue[i].is_valid(): continue
-			device.free_rid(queue[i])
+			var queued_rid := queue[i]
+			if not queued_rid.is_valid():
+				continue
+			device.free_rid(queued_rid)
 		queue.clear()
 
 	func free_rid(device : RenderingDevice, rid : RID) -> void:
@@ -38,20 +39,28 @@ static func create(device : RenderingDevice=null) -> RenderingContext:
 
 func _notification(what):
 	if what == NOTIFICATION_PREDELETE:
-		# All resources must be freed after use to avoid memory leaks.
 		deletion_queue.flush(device)
 		shader_cache.clear()
 		if device != RenderingServer.get_rendering_device():
 			device.free()
 
-# --- WRAPPER FUNCTIONS ---
-func submit() -> void: device.submit(); needs_sync = true
-func sync() -> void: device.sync(); needs_sync = false
-func compute_list_begin() -> int: return device.compute_list_begin()
-func compute_list_end() -> void: device.compute_list_end()
-func compute_list_add_barrier(compute_list : int) -> void: device.compute_list_add_barrier(compute_list)
+func submit() -> void:
+	device.submit()
+	needs_sync = true
 
-# --- HELPER FUNCTIONS ---
+func sync() -> void:
+	device.sync()
+	needs_sync = false
+
+func compute_list_begin() -> int:
+	return device.compute_list_begin()
+
+func compute_list_end() -> void:
+	device.compute_list_end()
+
+func compute_list_add_barrier(compute_list : int) -> void:
+	device.compute_list_add_barrier(compute_list)
+
 func load_shader(path : String) -> RID:
 	if not shader_cache.has(path):
 		var shader_file := load(path)
@@ -80,24 +89,19 @@ func create_texture(dimensions : Vector2i, format : RenderingDevice.DataFormat, 
 	texture_format.width = dimensions.x
 	texture_format.height = dimensions.y
 	texture_format.texture_type = RenderingDevice.TEXTURE_TYPE_2D if num_layers == 0 else RenderingDevice.TEXTURE_TYPE_2D_ARRAY
-	texture_format.usage_bits = usage # Default: RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT | RenderingDevice.TEXTURE_USAGE_COLOR_ATTACHMENT_BIT | RenderingDevice.TEXTURE_USAGE_STORAGE_BIT | RenderingDevice.TEXTURE_USAGE_CAN_COPY_TO_BIT | RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT
+	texture_format.usage_bits = usage
 	return Descriptor.new(deletion_queue.push(device.texture_create(texture_format, view, data)), RenderingDevice.UNIFORM_TYPE_IMAGE)
 
-## Creates a descriptor set. The ordering of the provided descriptors matches the binding ordering
-## within the shader.
 func create_descriptor_set(descriptors : Array[Descriptor], shader : RID, descriptor_set_index :=0) -> RID:
 	var uniforms : Array[RDUniform]
 	for i in range(len(descriptors)):
 		var uniform := RDUniform.new()
 		uniform.uniform_type = descriptors[i].type
-		uniform.binding = i  # This matches the binding in the shader.
+		uniform.binding = i
 		uniform.add_id(descriptors[i].rid)
 		uniforms.push_back(uniform)
 	return deletion_queue.push(device.uniform_set_create(uniforms, shader, descriptor_set_index))
 
-## Returns a [Callable] which will dispatch a compute pipeline (within a compute) list based on the
-## provided block dimensions. The ordering of the provided descriptor sets matches the set ordering
-## within the shader.
 func create_pipeline(block_dimensions : Array, descriptor_sets : Array, shader : RID) -> Callable:
 	var pipeline = deletion_queue.push(device.compute_pipeline_create(shader))
 	return func(context : RenderingContext, compute_list : int, push_constant : PackedByteArray=[], descriptor_set_overwrites:=[], block_dimensions_overwrite_buffer:=RID(), block_dimensions_overwrite_buffer_byte_offset:=0) -> void:
@@ -116,8 +120,6 @@ func create_pipeline(block_dimensions : Array, descriptor_sets : Array, shader :
 		else:
 			device.compute_list_dispatch(compute_list, block_dimensions[0], block_dimensions[1], block_dimensions[2])
 
-## Returns a [PackedFloat32Array] from the provided data, whose size is rounded up to the nearest
-## multiple of 16
 static func create_push_constant(data : Array) -> PackedByteArray:
 	var packed_size := len(data)*4
 	assert(packed_size <= 128, 'Push constant size must be at most 128 bytes!')

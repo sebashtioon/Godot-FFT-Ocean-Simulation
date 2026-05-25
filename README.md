@@ -1,19 +1,56 @@
 # Godot FFT Ocean Simulation
 
-## im yet to write a decent readme here. bear with me
----
-
 [mrow1.webm](https://github.com/user-attachments/assets/12452654-ef7e-4010-914a-f3257311f9d6)
 
+FFT-based ocean wave simulation in Godot 4.3 (Forward+). This project was made for a math assignment and was originally inspired by [2Retr0/GodotOceanWaves](https://github.com/2Retr0/GodotOceanWaves) and [Tessendorf's Paper on Simulating Ocean Water](https://jtessen.people.clemson.edu/reports/papers_files/coursenotes2004.pdf).
 
-## Implemented in Godot
+---
+
+This project generating realistic looking ocean waves by working in the frequency domain (wave spectrum), then converting that into the spatial domain using an inverse Fast Fourier Transform (IFFT) on the GPU.
+
+The paper I wrote on this: [Modelling Realistic Ocean Waves Using Trigonometry.pdf](https://github.com/sebashtioon/Godot-FFT-Ocean-Simulation/blob/main/Modelling%20Realistic%20Ocean%20Waves%20Using%20Trigonometry.pdf)
+
+## how to run it
+1. Install [Godot 4.3](https://godotengine.org/download/archive/4.3-stable/)
+2. Clone/download this repo
+3. Open it in Godot
+4. Run the main scene (`main.tscn`)
+
+## implemented features
+
+This project implements a complete ocean simulation/rendering pipeline on the GPU. A physically-motivated wave spectrum is generated in the frequency domain (JONSWAP/TMA-style with directional spreading), distributing wave energy across wave vectors $\mathbf{k}=(k_x,k_y)$ and directions. Each Fourier component is then evolved over time by applying a complex phase rotation,
+
+$$
+\tilde{h}(\mathbf{k}, t) = \tilde{h}(\mathbf{k}, 0)\,e^{i\,\omega(\mathbf{k})t}
+$$
+
+where the angular frequency $\omega(\mathbf{k})$ follows a dispersion relation. A common finite-depth model is
+
+$$
+\omega^2 = gk\,\tanh(kd)
+$$
+
+with $k=\|\mathbf{k}\|$, gravity $g$, and water depth $d$
+
+To obtain the actual ocean surface in the spatial domain, an inverse FFT is performed on the GPU (using a Stockham FFT compute kernel), reconstructing the height/displacement field $h(\mathbf{x},t)$:
+
+$$
+h(\mathbf{x}, t)=\sum_{\mathbf{k}} \tilde{h}(\mathbf{k}, t)\,e^{i\,\mathbf{k}\cdot\mathbf{x}}
+$$
+
+The output is used to generate displacement maps (surface geometry) and normal maps (lighting). Multiple wave cascades are blended across different tile sizes so that large swells and small-scale detail can coexist. On top of that, I added foam/whitecap controls (based on tunable thresholds/parameters) and an optional sea spray effect.
+
+
+## implementation in godot
 
 [mrow2.webm](https://github.com/user-attachments/assets/ae0e4b83-a407-43a9-83b2-cfe4a8cff19e)
 
 
-# References
+# references
 
 - 2Retr0. “GitHub - 2Retr0/GodotOceanWaves: FFT-Based Ocean-Wave Rendering, Implemented in Godot.” *GitHub*, 2025, github.com/2Retr0/GodotOceanWaves. Accessed 10 May 2025.
+  
+- Tessendorf, Jerry. *Simulating Ocean Water*.
 
 - 3Blue1Brown. “But What Is the Fourier Transform? A Visual Introduction.” *YouTube*, 26 Jan. 2018, www.youtube.com/watch?v=spUNpyF58BY.
 
@@ -23,7 +60,7 @@
 
 - “Fourtran.dvi.” *EE102: Signal Processing and Linear Systems I: Fourier Transform*, 2001, web.stanford.edu/class/ee102/lectures/fourtran.
 
-- Gauss and the History of The.
+- Gauss and the History of The Fast Fourier Transform, https://www.cis.rit.edu/class/simg716/Gauss_History_FFT.pdf
 
 - Horvath, Christopher. *Empirical Directional Wave Spectra for Computer Graphics*. 8 Aug. 2015, https://doi.org/10.1145/2791261.2791267. Accessed 15 Oct. 2023.
 
@@ -46,8 +83,6 @@
 - Swanson, Jez. “An Interactive Introduction to Fourier Transforms.” *Www.jezzamon.com*, www.jezzamon.com/fourier/.
 
 - Tessendorf, Jerry, et al. *Normal Maps for Rendering Vast Ocean Scenes*. 2023.
-
-- Tessendorf, Jerry. *Simulating Ocean Water*.
 
 - “Trochoidal Wave.” *Wikipedia*, 16 Apr. 2020, en.wikipedia.org/wiki/Trochoidal_wave.
 

@@ -1,7 +1,7 @@
 @tool
 extends Node3D
 
-var clipmap_tile_size := 1.0 # Not the smallest tile size, but one that reduces the amount of vertex jitter.
+var clipmap_tile_size := 1.0
 var previous_tile := Vector3i.MAX
 var should_render_imgui := not Engine.is_editor_hint()
 
@@ -9,7 +9,7 @@ var should_render_imgui := not Engine.is_editor_hint()
 @onready var camera : Variant = viewport.get_camera_3d()
 @onready var water := $Water
 
-# References to various parameters (for imgui)
+
 @onready var _camera_fov := [camera.fov]
 @onready var _updates_per_second := [water.updates_per_second]
 @onready var _water_color := [water.water_color.r, water.water_color.g, water.water_color.b]

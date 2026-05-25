@@ -1,6 +1,6 @@
 [gd_scene load_steps=24 format=3 uid="uid://dx4r13gqfh13"]
 
-[ext_resource type="Script" path="res://main.gd" id="1_skarq"]
+[ext_resource type="Script" path="res://src/main/main.gd" id="1_skarq"]
 [ext_resource type="Texture2D" uid="uid://cxl006vbsasmw" path="res://assets/skybox2.exr" id="2_m2cr2"]
 [ext_resource type="Script" path="res://assets/water/wave_cascade_parameters.gd" id="2_pw5n6"]
 [ext_resource type="Script" path="res://src/camera/camera.gd" id="4_v2yip"]

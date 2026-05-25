@@ -9,7 +9,7 @@
 [ext_resource type="Script" path="res://src/water/water.gd" id="7_s0x5e"]
 [ext_resource type="Shader" path="res://res/shad/spatial/sea_spray.gdshader" id="8_eu8jb"]
 [ext_resource type="Material" uid="uid://5xqyddws6rt5" path="res://res/shad mat/mat_spray.tres" id="9_skbf4"]
-[ext_resource type="Texture2D" uid="uid://dtm5tyuh2slqt" path="res://assets/water/sea_spray.png" id="10_spqpo"]
+[ext_resource type="Texture2D" uid="uid://dtm5tyuh2slqt" path="res://ast/textures/water/sea_spray.png" id="10_spqpo"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_t7jwl"]
 panorama = ExtResource("2_m2cr2")

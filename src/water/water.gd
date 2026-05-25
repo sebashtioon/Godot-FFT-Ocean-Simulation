@@ -1,8 +1,8 @@
 @tool
 extends MeshInstance3D
 
-const WATER_MAT := preload('res://assets/water/mat_water.tres')
-const SPRAY_MAT := preload('res://assets/water/mat_spray.tres')
+const WATER_MAT := preload('res://res/shad mat/mat_water.tres')
+const SPRAY_MAT := preload('res://res/shad mat/mat_spray.tres')
 const WATER_MESH_HIGH := preload('res://ast/models/water/clipmap_high.obj')
 const WATER_MESH_LOW := preload('res://ast/models/water/clipmap_low.obj')
 

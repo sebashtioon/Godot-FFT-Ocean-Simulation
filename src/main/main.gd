@@ -40,8 +40,6 @@ func _physics_process(delta: float) -> void:
 	var total_wind_speed := 0.0
 	for params in water.parameters:
 		total_wind_speed += params.wind_speed
-	$OceanAudioPlayer.volume_db = lerpf(-30.0, 15.0, minf(total_wind_speed/15.0, 1.0))
-	$WindAudioPlayer.volume_db = lerpf(5.0, -30.0, minf(total_wind_speed/15.0, 1.0))
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed(&'toggle_imgui'):

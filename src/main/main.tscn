@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3 uid="uid://dx4r13gqfh13"]
+[gd_scene load_steps=22 format=3 uid="uid://dx4r13gqfh13"]
 
 [ext_resource type="Script" path="res://src/main/main.gd" id="1_skarq"]
 [ext_resource type="Texture2D" uid="uid://cxl006vbsasmw" path="res://assets/skybox2.exr" id="2_m2cr2"]
@@ -6,9 +6,7 @@
 [ext_resource type="Script" path="res://src/camera/camera.gd" id="4_v2yip"]
 [ext_resource type="Material" uid="uid://byumtcccq4ew3" path="res://assets/water/mat_water.tres" id="5_lt75t"]
 [ext_resource type="ArrayMesh" uid="uid://ix4vp1y05f1s" path="res://ast/models/water/clipmap_high.obj" id="5_n61pp"]
-[ext_resource type="AudioStream" uid="uid://cvvn0vke5comw" path="res://assets/ocean_loop.wav" id="6_jpklm"]
 [ext_resource type="Script" path="res://assets/water/water.gd" id="7_s0x5e"]
-[ext_resource type="AudioStream" uid="uid://ck6vmandgjhy0" path="res://assets/wind_loop.wav" id="8_6r5si"]
 [ext_resource type="Shader" path="res://assets/shaders/spatial/sea_spray.gdshader" id="8_eu8jb"]
 [ext_resource type="Material" uid="uid://5xqyddws6rt5" path="res://assets/water/mat_spray.tres" id="9_skbf4"]
 [ext_resource type="Texture2D" uid="uid://dtm5tyuh2slqt" path="res://assets/water/sea_spray.png" id="10_spqpo"]
@@ -147,13 +145,3 @@ draw_pass_1 = SubResource("QuadMesh_06d3e")
 [node name="FogVolume" type="FogVolume" parent="."]
 shape = 4
 material = SubResource("FogMaterial_riff4")
-
-[node name="OceanAudioPlayer" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("6_jpklm")
-volume_db = 15.0
-autoplay = true
-
-[node name="WindAudioPlayer" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("8_6r5si")
-volume_db = -30.0
-autoplay = true

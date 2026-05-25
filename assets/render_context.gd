@@ -1,5 +1,4 @@
 class_name RenderingContext extends Object
-## A wrapper around [RenderingDevice] that handles basic memory management/allocation
 
 class DeletionQueue:
 	var queue : Array[RID] = []

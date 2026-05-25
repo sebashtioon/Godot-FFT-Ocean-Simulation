@@ -1,12 +1,8 @@
 shader_type spatial;
 render_mode world_vertex_coords, shadows_disabled;
-/**
- * Water lighting model roughly follows the 2019 GDC talk: "Wakes, Explosions and Lighting: Interactive Water Simulation in Atlas".
- * Source: https://gpuopen.com/gdc-presentations/2019/gdc-2019-agtd6-interactive-water-simulation-in-atlas.pdf
- */
 
-#define MAX_CASCADES 8    // I am unsure how to generalize this.
-#define REFLECTANCE  0.02 // Reflectance from air to water (eta=1.33).
+#define MAX_CASCADES 8
+#define REFLECTANCE  0.02
 
 global uniform vec4 water_color : source_color;
 global uniform vec4 foam_color : source_color;

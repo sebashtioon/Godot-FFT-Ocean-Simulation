@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cxl006vbsasmw"
-path.bptc="res://.godot/imported/kloofendal_48d_partly_cloudy_puresky_4k.exr-0c762acd541e6f2c8de1b36ef126187e.bptc.ctex"
+path.bptc="res://.godot/imported/skybox2.exr-562361bb0d95e4ce9f2994e8bc2952ec.bptc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://assets/kloofendal_48d_partly_cloudy_puresky_4k.exr"
-dest_files=["res://.godot/imported/kloofendal_48d_partly_cloudy_puresky_4k.exr-0c762acd541e6f2c8de1b36ef126187e.bptc.ctex"]
+source_file="res://assets/skybox2.exr"
+dest_files=["res://.godot/imported/skybox2.exr-562361bb0d95e4ce9f2994e8bc2952ec.bptc.ctex"]
 
 [params]
 

@@ -1,6 +1,6 @@
 [gd_resource type="ShaderMaterial" load_steps=2 format=4 uid="uid://5xqyddws6rt5"]
 
-[ext_resource type="Shader" path="res://assets/shaders/spatial/sea_spray_particle.gdshader" id="1_puvd8"]
+[ext_resource type="Shader" path="res://res/shad/spatial/sea_spray_particle.gdshader" id="1_puvd8"]
 
 [resource]
 shader = ExtResource("1_puvd8")

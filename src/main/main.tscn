@@ -104,8 +104,10 @@ albedo = Color(0.988718, 0.989631, 0.989629, 1)
 height_falloff = 0.176
 edge_fade = 1.75
 
-[node name="world" type="Node3D"]
+[node name="world" type="Node3D" node_paths=PackedStringArray("camera", "water")]
 script = ExtResource("1_skarq")
+camera = NodePath("camera")
+water = NodePath("water")
 
 [node name="environment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_icybu")
@@ -117,12 +119,12 @@ shadow_normal_bias = 6.464
 shadow_opacity = 0.8
 shadow_blur = 5.0
 
-[node name="Camera" type="Camera3D" parent="."]
+[node name="camera" type="Camera3D" parent="."]
 transform = Transform3D(-0.992966, -0.013804, 0.117596, -2.32831e-10, 0.993181, 0.116584, -0.118404, 0.115764, -0.986195, 1.35044, 10.8978, -31.7831)
 script = ExtResource("4_v2yip")
 
-[node name="Water" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -12)
+[node name="water" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -31)
 sorting_offset = 999.0
 material_override = ExtResource("5_lt75t")
 cast_shadow = 0
@@ -133,7 +135,7 @@ water_color = Color(0.0702554, 0.14344, 0.200377, 1)
 foam_color = Color(0.733086, 0.700799, 0.656594, 1)
 parameters = Array[ExtResource("2_pw5n6")]([SubResource("Resource_adqv5"), SubResource("Resource_luhq0"), SubResource("Resource_83u3u")])
 
-[node name="WaterSprayEmitter" type="GPUParticles3D" parent="Water"]
+[node name="WaterSprayEmitter" type="GPUParticles3D" parent="water"]
 transform = Transform3D(15, 0, 0, 0, 15, 0, 0, 0, 15, 0, 0, 0)
 material_override = SubResource("ShaderMaterial_ds3o1")
 cast_shadow = 0

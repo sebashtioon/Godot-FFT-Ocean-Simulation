@@ -10,8 +10,8 @@
 
 layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE, local_size_z = 2) in;
 
-layout(rgba16f, set = 0, binding = 0) image2DArray displacement_map;
-layout(rgba16f, set = 0, binding = 1) image2DArray normal_map;
+layout(rgba16f, set = 0, binding = 0) uniform image2DArray displacement_map;
+layout(rgba16f, set = 0, binding = 1) uniform image2DArray normal_map;
 
 layout(std430, set = 1, binding = 0) restrict buffer FFTBuffer {
 	vec2 data[]; // map_size x map_size x num_spectra x 2 * num_cascades

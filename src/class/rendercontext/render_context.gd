@@ -107,6 +107,8 @@ func create_pipeline(block_dimensions : Array, descriptor_sets : Array, shader :
 	return func(context : RenderingContext, compute_list : int, push_constant : PackedByteArray=[], descriptor_set_overwrites:=[], block_dimensions_overwrite_buffer:=RID(), block_dimensions_overwrite_buffer_byte_offset:=0) -> void:
 		var device := context.device
 		var sets = descriptor_sets if descriptor_set_overwrites.is_empty() else descriptor_set_overwrites
+		if not pipeline.is_valid():
+			return
 		assert(len(block_dimensions) == 3 or block_dimensions_overwrite_buffer.is_valid(), 'Must specify block dimensions or specify a dispatch indirect buffer!')
 		assert(len(sets) >= 1, 'Must specify at least on descriptor set!')
 

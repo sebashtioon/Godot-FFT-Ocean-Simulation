@@ -13,8 +13,6 @@ var pipelines : Dictionary
 var descriptors : Dictionary
 
 var _gpu_num_cascades := 0
-var _next_cascade_index := 0
-var _cascade_last_sim_time := PackedFloat32Array()
 
 func init_gpu(num_cascades : int) -> void:
 	# --- DEVICE/SHADER CREATION ---
@@ -91,41 +89,26 @@ func _update(compute_list : int, cascade_index : int, parameters : Array[WaveCas
 
 func update(delta : float, parameters : Array[WaveCascadeParameters]) -> void:
 	assert(parameters.size() != 0)
+
 	if not context:
-		init_gpu(maxi(2, len(parameters))) # FIXME: This is needed because my RenderContext API sucks...
+		init_gpu(maxi(2, len(parameters)))
 
-	# Ensure per-cascade state is in sync.
-	if _cascade_last_sim_time.size() != parameters.size():
-		_cascade_last_sim_time.resize(parameters.size())
-		for i in range(parameters.size()):
-			_cascade_last_sim_time[i] = parameters[i].time
-		_next_cascade_index = 0
-
-	# Advance time for all cascades.
+	# Advance simulation time for all cascades
 	for i in range(parameters.size()):
 		parameters[i].time += delta
 
-	# Pick a cascade to update (prioritize spectrum regeneration).
-	var cascade_index := -1
-	for offset in range(parameters.size()):
-		var idx := (_next_cascade_index + offset) % parameters.size()
-		if parameters[idx].should_generate_spectrum:
-			cascade_index = idx
-			break
-	if cascade_index == -1:
-		cascade_index = _next_cascade_index
-	_next_cascade_index = (cascade_index + 1) % parameters.size()
-
-	# Compute per-cascade delta since its last GPU update (important for foam integration).
-	var params := parameters[cascade_index]
-	var dt_cascade := maxf(0.0, params.time - _cascade_last_sim_time[cascade_index])
-	_cascade_last_sim_time[cascade_index] = params.time
-	# Note: The constants are used to normalize parameters between 0 and 10.
-	params.foam_grow_rate = dt_cascade * params.foam_amount * 7.5
-	params.foam_decay_rate = dt_cascade * maxf(0.5, 10.0 - params.foam_amount) * 1.15
-
 	var compute_list := context.compute_list_begin()
-	_update(compute_list, cascade_index, parameters)
+
+	# Update ALL cascades every frame
+	for cascade_index in range(parameters.size()):
+		var params := parameters[cascade_index]
+
+		# Foam integration
+		params.foam_grow_rate = delta * params.foam_amount * 7.5
+		params.foam_decay_rate = delta * maxf(0.5, 10.0 - params.foam_amount) * 1.15
+
+		_update(compute_list, cascade_index, parameters)
+
 	context.compute_list_end()
 
 func _notification(what):

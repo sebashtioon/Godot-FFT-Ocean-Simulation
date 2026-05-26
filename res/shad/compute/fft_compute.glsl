@@ -11,7 +11,7 @@
 
 layout(local_size_x = MAX_MAP_SIZE, local_size_y = 1, local_size_z = 1) in;
 
-layout(std430, set = 1, binding = 0) restrict readonly buffer ButterflyFactorBuffer {
+layout(std430, set = 1, binding = 0) restrict buffer ButterflyFactorBuffer {
 	vec4 butterfly[]; // log2(map_size) x map_size
 };
 

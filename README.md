@@ -8,6 +8,8 @@ FFT-based ocean wave simulation in Godot 4.3 (Forward+). This project was made f
 
 This project generating realistic looking ocean waves by working in the frequency domain (wave spectrum), then converting that into the spatial domain using an inverse Fast Fourier Transform (IFFT) on the GPU.
 
+**Right now this only works on Godot 4.3, but i am working to make this not flood errors in the console for no reason in >4.6**
+
 The paper I wrote on this: [Modelling Realistic Ocean Waves Using Trigonometry.pdf](https://github.com/sebashtioon/Godot-FFT-Ocean-Simulation/blob/main/Modelling%20Realistic%20Ocean%20Waves%20Using%20Trigonometry.pdf)
 
 ## how to run it

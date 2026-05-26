@@ -88,12 +88,6 @@ shader_parameter/dissolve_texture = SubResource("NoiseTexture2D_tsx6q")
 
 [sub_resource type="QuadMesh" id="QuadMesh_06d3e"]
 
-[sub_resource type="FogMaterial" id="FogMaterial_riff4"]
-density = 8.0
-albedo = Color(0.988718, 0.989631, 0.989629, 1)
-height_falloff = 0.176
-edge_fade = 1.75
-
 [node name="world" type="Node3D" unique_id=1756858251 node_paths=PackedStringArray("camera", "water")]
 script = ExtResource("1_skarq")
 camera = NodePath("camera")
@@ -133,7 +127,3 @@ amount = 32768
 lifetime = 6.0
 process_material = ExtResource("9_skbf4")
 draw_pass_1 = SubResource("QuadMesh_06d3e")
-
-[node name="fog" type="FogVolume" parent="." unique_id=1285809989]
-shape = 4
-material = SubResource("FogMaterial_riff4")

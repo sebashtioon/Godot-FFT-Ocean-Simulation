@@ -14,7 +14,8 @@ layout(rgba16f, set = 0, binding = 0) uniform image2DArray displacement_map;
 layout(rgba16f, set = 0, binding = 1) uniform image2DArray normal_map;
 
 layout(std430, set = 1, binding = 0) restrict buffer FFTBuffer {
-	vec2 data[]; // map_size x map_size x num_spectra x 2 * num_cascades
+	// Layout: map_size x map_size x NUM_SPECTRA x 2 (ping-pong: input|output)
+	vec2 data[];
 };
 
 layout(push_constant) restrict readonly uniform PushConstants {
@@ -29,7 +30,7 @@ shared vec2 tile[NUM_SPECTRA][TILE_SIZE][TILE_SIZE];
 
 // Note: There is an assumption that the FFT does not transpose a second time. Thus,
 //       we access the FFT buffer at an offset of NUM_LAYERS*map_size*map_size
-#define FFT_DATA(id, layer) (data[(id.z)*map_size*map_size*NUM_SPECTRA*2 + NUM_SPECTRA*map_size*map_size + (layer)*map_size*map_size + (id).y*map_size + (id).x])
+#define FFT_DATA(id, layer) (data[NUM_SPECTRA*map_size*map_size + (layer)*map_size*map_size + (id).y*map_size + (id).x])
 void main() {
 	const uint map_size = gl_NumWorkGroups.x * gl_WorkGroupSize.x;
 	const uvec3 id_local = gl_LocalInvocationID;

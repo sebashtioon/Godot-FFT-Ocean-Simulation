@@ -4,15 +4,17 @@ class_name WaveGenerator extends Node
 
 const G := 9.81
 const DEPTH := 20.0
+const NUM_SPECTRA := 4
+const BYTES_PER_VEC2 := 8
 
 var map_size : int
 var context : RenderingContext
 var pipelines : Dictionary
 var descriptors : Dictionary
 
-# Generator state per invocation of `update()`.
-var pass_parameters : Array[WaveCascadeParameters]
-var pass_num_cascades_remaining : int
+var _gpu_num_cascades := 0
+var _next_cascade_index := 0
+var _cascade_last_sim_time := PackedFloat32Array()
 
 func init_gpu(num_cascades : int) -> void:
 	# --- DEVICE/SHADER CREATION ---
@@ -27,14 +29,15 @@ func init_gpu(num_cascades : int) -> void:
 	# --- DESCRIPTOR PREPARATION ---
 	var dims := Vector2i(map_size, map_size)
 	var num_fft_stages := int(log(map_size) / log(2))
-	
-	print("map_size:", map_size)
-	print("num_cascades:", num_cascades)
-	print("fft stages:", num_fft_stages)
 
-	descriptors[&'spectrum'] = context.create_texture(dims, RenderingDevice.DATA_FORMAT_R32G32B32A32_SFLOAT, RenderingDevice.TEXTURE_USAGE_STORAGE_BIT | RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT, num_cascades)
+	_gpu_num_cascades = num_cascades
+	# Spectrum is written once per parameter change and then read every sim step; RGBA16F is plenty.
+	descriptors[&'spectrum'] = context.create_texture(dims, RenderingDevice.DATA_FORMAT_R16G16B16A16_SFLOAT, RenderingDevice.TEXTURE_USAGE_STORAGE_BIT, num_cascades)
 	descriptors[&'butterfly_factors'] = context.create_storage_buffer(num_fft_stages*map_size * 4 * 4)
-	descriptors[&'fft_buffer'] = context.create_storage_buffer(num_cascades * map_size*map_size * 4*2 * 2 * 4) # Size: (map size^2 * 4 FFTs * 2 temp buffers (for Stockham FFT) * sizeof(vec2))
+	# Reuse a single FFT buffer across cascades (we update one cascade at a time).
+	# Size: map_size^2 * NUM_SPECTRA * 2 (ping-pong) * sizeof(vec2)
+	var fft_buffer_bytes := map_size * map_size * NUM_SPECTRA * 2 * BYTES_PER_VEC2
+	descriptors[&'fft_buffer'] = context.create_storage_buffer(fft_buffer_bytes)
 	descriptors[&'displacement_map'] = context.create_texture(dims, RenderingDevice.DATA_FORMAT_R16G16B16A16_SFLOAT, RenderingDevice.TEXTURE_USAGE_STORAGE_BIT | RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT | RenderingDevice.TEXTURE_USAGE_CAN_UPDATE_BIT, num_cascades)
 	descriptors[&'normal_map'] = context.create_texture(dims, RenderingDevice.DATA_FORMAT_R16G16B16A16_SFLOAT, RenderingDevice.TEXTURE_USAGE_STORAGE_BIT | RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT | RenderingDevice.TEXTURE_USAGE_CAN_UPDATE_BIT, num_cascades)
 
@@ -45,36 +48,24 @@ func init_gpu(num_cascades : int) -> void:
 	[descriptors[&'butterfly_factors'], descriptors[&'fft_buffer']],
 	fft_compute_shader,
 	1)
-	var transpose_set := context.create_descriptor_set(
-	[descriptors[&'butterfly_factors'], descriptors[&'fft_buffer']],
-	transpose_shader,
-	0)
+	var transpose_set := context.create_descriptor_set([descriptors[&'fft_buffer']], transpose_shader, 0)
 	var fft_buffer_write_set := context.create_descriptor_set([descriptors[&'fft_buffer']], spectrum_modulate_shader, 1)
 	var fft_buffer_read_set := context.create_descriptor_set([descriptors[&'fft_buffer']], fft_unpack_shader, 1)
 	var unpack_set := context.create_descriptor_set([descriptors[&'displacement_map'], descriptors[&'normal_map']], fft_unpack_shader, 0)
 
 	# --- COMPUTE PIPELINE CREATION ---
-	pipelines[&'spectrum_compute'] = context.create_pipeline([map_size/16, map_size/16, 1], [spectrum_set], spectrum_compute_shader)
-	pipelines[&'spectrum_modulate'] = context.create_pipeline([map_size/16, map_size/16, 1], [spectrum_read_set, fft_buffer_write_set], spectrum_modulate_shader)
+	pipelines[&'spectrum_compute'] = context.create_pipeline([map_size >> 4, map_size >> 4, 1], [spectrum_set], spectrum_compute_shader)
+	pipelines[&'spectrum_modulate'] = context.create_pipeline([map_size >> 4, map_size >> 4, 1], [spectrum_read_set, fft_buffer_write_set], spectrum_modulate_shader)
 	# Note: Some shaders only declare resources in set=1 (no set=0). Our pipeline binder uses
 	# the array index as the shader set index, so we pass a sparse array and skip invalid RIDs.
-	pipelines[&'fft_butterfly'] = context.create_pipeline([map_size/2/64, num_fft_stages, 1], [RID(), fft_butterfly_set], fft_butterfly_shader)
-	pipelines[&'fft_compute'] = context.create_pipeline([1, map_size, 4], [RID(), fft_compute_set], fft_compute_shader)
-	pipelines[&'transpose'] = context.create_pipeline([map_size/32, map_size/32, 4], [transpose_set], transpose_shader)
-	pipelines[&'fft_unpack'] = context.create_pipeline([map_size/16, map_size/16, 1], [unpack_set, fft_buffer_read_set], fft_unpack_shader)
+	pipelines[&'fft_butterfly'] = context.create_pipeline([map_size >> 7, num_fft_stages, 1], [RID(), fft_butterfly_set], fft_butterfly_shader)
+	pipelines[&'fft_compute'] = context.create_pipeline([1, map_size, NUM_SPECTRA], [RID(), fft_compute_set], fft_compute_shader)
+	pipelines[&'transpose'] = context.create_pipeline([map_size >> 5, map_size >> 5, NUM_SPECTRA], [transpose_set], transpose_shader)
+	pipelines[&'fft_unpack'] = context.create_pipeline([map_size >> 4, map_size >> 4, 1], [unpack_set, fft_buffer_read_set], fft_unpack_shader)
 
 	# We only need to generate butterfly factors once for each map_size.
 	var compute_list := context.compute_list_begin()
 	pipelines[&'fft_butterfly'].call(context, compute_list)
-	context.compute_list_end()
-
-func _process(delta: float) -> void:
-	# Update one cascade each frame for load balancing.
-	if pass_num_cascades_remaining == 0: return
-	pass_num_cascades_remaining -= 1
-
-	var compute_list := context.compute_list_begin()
-	_update(compute_list, pass_num_cascades_remaining, pass_parameters)
 	context.compute_list_end()
 
 func _update(compute_list : int, cascade_index : int, parameters : Array[WaveCascadeParameters]) -> void:
@@ -88,40 +79,54 @@ func _update(compute_list : int, cascade_index : int, parameters : Array[WaveCas
 	pipelines[&'spectrum_modulate'].call(context, compute_list, RenderingContext.create_push_constant([params.tile_length.x, params.tile_length.y, DEPTH, params.time, cascade_index]))
 
 	## --- WAVE SPECTRA INVERSE FOURIER TRANSFORM ---
-	var fft_push_constant := RenderingContext.create_push_constant([cascade_index])
 	# Note: We need not do a second transpose after computing FFT on rows since rotating the wave by
 	#       PI/2 doesn't affect it visually.
-	pipelines[&'fft_compute'].call(context, compute_list, fft_push_constant)
-	pipelines[&'transpose'].call(context, compute_list, fft_push_constant)
+	pipelines[&'fft_compute'].call(context, compute_list)
+	pipelines[&'transpose'].call(context, compute_list)
 	context.compute_list_add_barrier(compute_list) # FIXME: Why is a barrier only needed here?!
-	pipelines[&'fft_compute'].call(context, compute_list, fft_push_constant)
+	pipelines[&'fft_compute'].call(context, compute_list)
 
 	## --- DISPLACEMENT/NORMAL MAP UPDATE ---
 	pipelines[&'fft_unpack'].call(context, compute_list, RenderingContext.create_push_constant([cascade_index, params.whitecap, params.foam_grow_rate, params.foam_decay_rate]))
 
-## Begins updating wave cascades based on the provided parameters. To balance stutter,
-## the generator will schedule one cascade update per frame. All cascades from the
-## previous invocation that have not been processed yet will be updated.
 func update(delta : float, parameters : Array[WaveCascadeParameters]) -> void:
 	assert(parameters.size() != 0)
 	if not context:
 		init_gpu(maxi(2, len(parameters))) # FIXME: This is needed because my RenderContext API sucks...
-	elif pass_num_cascades_remaining != 0: # Update cascades from previous invocation that have yet to be processed...
-		var compute_list := context.compute_list_begin()
-		for i in range(pass_num_cascades_remaining):
-			_update(compute_list, i, pass_parameters)
-		context.compute_list_end()
 
-	# Update each cascade's parameters that rely on time delta
-	for i in len(parameters):
-		var params := parameters[i]
-		params.time += delta
-		# Note: The constants are used to normalize parameters between 0 and 10.
-		params.foam_grow_rate = delta * params.foam_amount*7.5
-		params.foam_decay_rate = delta * maxf(0.5, 10.0 - params.foam_amount)*1.15
+	# Ensure per-cascade state is in sync.
+	if _cascade_last_sim_time.size() != parameters.size():
+		_cascade_last_sim_time.resize(parameters.size())
+		for i in range(parameters.size()):
+			_cascade_last_sim_time[i] = parameters[i].time
+		_next_cascade_index = 0
 
-	pass_parameters = parameters
-	pass_num_cascades_remaining = len(parameters)
+	# Advance time for all cascades.
+	for i in range(parameters.size()):
+		parameters[i].time += delta
+
+	# Pick a cascade to update (prioritize spectrum regeneration).
+	var cascade_index := -1
+	for offset in range(parameters.size()):
+		var idx := (_next_cascade_index + offset) % parameters.size()
+		if parameters[idx].should_generate_spectrum:
+			cascade_index = idx
+			break
+	if cascade_index == -1:
+		cascade_index = _next_cascade_index
+	_next_cascade_index = (cascade_index + 1) % parameters.size()
+
+	# Compute per-cascade delta since its last GPU update (important for foam integration).
+	var params := parameters[cascade_index]
+	var dt_cascade := maxf(0.0, params.time - _cascade_last_sim_time[cascade_index])
+	_cascade_last_sim_time[cascade_index] = params.time
+	# Note: The constants are used to normalize parameters between 0 and 10.
+	params.foam_grow_rate = dt_cascade * params.foam_amount * 7.5
+	params.foam_decay_rate = dt_cascade * maxf(0.5, 10.0 - params.foam_amount) * 1.15
+
+	var compute_list := context.compute_list_begin()
+	_update(compute_list, cascade_index, parameters)
+	context.compute_list_end()
 
 func _notification(what):
 	if what == NOTIFICATION_PREDELETE:

@@ -18,7 +18,8 @@ layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 layout(rgba16f, set = 0, binding = 0) restrict readonly uniform image2DArray spectrum;
 
 layout(std430, set = 1, binding = 0) restrict writeonly buffer FFTBuffer {
-	vec2 data[]; // map_size x map_size x num_spectra x 2 * num_cascades
+	// Layout: map_size x map_size x NUM_SPECTRA x 2 (ping-pong: input|output)
+	vec2 data[];
 };
 
 layout(push_constant) restrict readonly uniform PushConstants {
@@ -49,19 +50,19 @@ float dispersion_relation(in float k) {
 	return sqrt(G*k*tanh(k*depth));
 }
 
-#define FFT_DATA(id, layer) (data[(id.z)*map_size*map_size*NUM_SPECTRA*2 + (layer)*map_size*map_size + (id.y)*map_size + (id.x)])
+#define FFT_DATA(id, layer) (data[(layer)*map_size*map_size + (id.y)*map_size + (id.x)])
 void main() {
 	const uint map_size = gl_NumWorkGroups.x * gl_WorkGroupSize.x;
-	const uint num_stages = findMSB(map_size); // Equivalent: log2(map_size) (assuming map_size is a power of 2)
 	const ivec2 dims = imageSize(spectrum).xy;
-	const ivec3 id = ivec3(gl_GlobalInvocationID.xy, cascade_index);
+	const ivec2 id = ivec2(gl_GlobalInvocationID.xy);
+	const ivec3 spectrum_id = ivec3(id, cascade_index);
 
-	vec2 k_vec = (id.xy - dims*0.5)*2.0*PI / tile_length; // Wave direction
+	vec2 k_vec = (id - dims*0.5)*2.0*PI / tile_length; // Wave direction
 	float k = length(k_vec) + 1e-6;
 	vec2 k_unit = k_vec / k;
 
 	// --- WAVE SPECTRUM MODULATION ---
-	vec4 h0 = imageLoad(spectrum, id); // xy=h0(k), zw=conj(h0(-k))
+	vec4 h0 = imageLoad(spectrum, spectrum_id); // xy=h0(k), zw=conj(h0(-k))
 	float dispersion = dispersion_relation(k) * time;
 	vec2 modulation = exp_complex(dispersion);
 	// Note: h respects the complex conjugation property

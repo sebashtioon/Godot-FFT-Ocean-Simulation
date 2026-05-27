@@ -63,7 +63,12 @@ void main() {
         return;
     }
 
+    ivec2 map_dims = imageSize(displacement_map).xy;
+    int map_size = map_dims.x;
+    float inv_map_size = 1.0 / float(map_size);
+    int layer_count = imageSize(displacement_map).z;
 
+    vec2 world_xz = points[idx].xy;
 
 
 

@@ -23,4 +23,19 @@ layout(std430, set = 1, binding = 1) restrict writeonly buffer Results {
     vec4 results[];
 };
 
+layout(push_constant) uniform PushConstants{
+    uint query_count;
+    uint num_cascades;
+    float water_y;
+    float _pad0;
+};
+
+void main() {
+
+
+
+
+    
+}
+
 

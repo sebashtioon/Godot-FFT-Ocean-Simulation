@@ -52,6 +52,7 @@ func _render_imgui() -> void:
 
 	ImGui.Begin(' ', [], ImGui.WindowFlags_AlwaysAutoResize | ImGui.WindowFlags_NoMove)
 	ImGui.SetWindowPos(Vector2(20, 20))
+	@warning_ignore("narrowing_conversion")
 	_render_imgui_ocean(fps, mesh_quality_keys)
 	_render_imgui_parameters()
 	_render_imgui_camera()
@@ -72,6 +73,7 @@ func _update_water_tile() -> void:
 		previous_tile = tile
 
 func _sum_wind_speed() -> void:
+	@warning_ignore("unused_variable")
 	var total_wind_speed := 0.0
 	for params in water.parameters:
 		total_wind_speed += params.wind_speed

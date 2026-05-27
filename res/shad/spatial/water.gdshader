@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode world_vertex_coords, shadows_disabled;
+render_mode world_vertex_coords, shadows_disabled, cull_disabled;
 
 #define MAX_CASCADES 8
 #define REFLECTANCE  0.02
@@ -84,8 +84,11 @@ void fragment() {
 
 	gradient *= mix(0.015, normal_strength, exp(-dist*0.0175)); // Blend normal with terrain normal as distance increases.
 	NORMAL = (VIEW_MATRIX * vec4(normalize(vec3(-gradient.x, 1.0, -gradient.y)), 0.0)).xyz;
+	// Two-sided water: when viewing the underside, flip the normal so Fresnel/lighting stays sane.
+	NORMAL *= FRONT_FACING ? 1.0 : -1.0;
 
-	fresnel = mix(pow(1.0 - dot(VIEW, NORMAL), 5.0*exp(-2.69*roughness)) / (1.0 + 22.7*pow(roughness, 1.5)), 1.0, REFLECTANCE);
+	float ndotv = clamp(dot(VIEW, NORMAL), 0.0, 1.0);
+	fresnel = mix(pow(1.0 - ndotv, 5.0*exp(-2.69*roughness)) / (1.0 + 22.7*pow(roughness, 1.5)), 1.0, REFLECTANCE);
 	ROUGHNESS = (1.0 - fresnel) * foam_factor + 0.4; // Roughness is proportional to foam/fog amount and fresnel.
 }
 
@@ -108,8 +111,8 @@ void light() {
 	float dot_nv = max(dot(NORMAL, VIEW), 2e-5);
 
 	// --- SPECULAR ---
-	float light_mask = smith_masking_shadowing(roughness, dot_nv);
-	float view_mask = smith_masking_shadowing(roughness, dot_nl);
+	float light_mask = smith_masking_shadowing(dot_nv, roughness);
+	float view_mask = smith_masking_shadowing(dot_nl, roughness);
 	float microfacet_distribution = ggx_distribution(dot(NORMAL, halfway), roughness);
 	float geometric_attenuation = 1.0 / (1.0 + light_mask + view_mask);
 	SPECULAR_LIGHT += fresnel * microfacet_distribution * geometric_attenuation / (4.0 * dot_nv + 0.1) * ATTENUATION;

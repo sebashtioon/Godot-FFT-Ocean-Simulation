@@ -57,6 +57,8 @@ vec4 displacement_bilinear(vec2 uv, int layer, int size) {
 
 };
 
+
+
 void main() {
     uint idx = gl_GlobalInvocationID.x;
     if (idx => query_count) { // check
@@ -82,6 +84,15 @@ void main() {
 
     // need to iterate throgh cascades
     for (uint i = 0U; i < cascades; ++i) {
+        vec4 scales = map_scales[i];
+        vec2 uv = world_xz * scales.xy;
+
+        float h0 = displacement_bilinear(uv, int(i), map_size).y * scales.z;
+        height += h0;
+
+        float hpx = displacement_bilinear(uv + vec2(inv))
+
+
         dhdx += 
         dhdz += 
     }

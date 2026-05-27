@@ -17,6 +17,10 @@ layout(std430, set = 1, binding = 0) restrict readonly buffer QueryPoints {
     // as a vec4 x, z, 0, 0
     vec4 points[];
 };
+layout(std430, set = 1, binding = 1) restrict writeonly buffer Results {
+    // as a vec4, with the height and normal.xyz
 
+    vec4 results[];
+};
 
 

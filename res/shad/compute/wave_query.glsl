@@ -8,9 +8,15 @@
 
 
 layout (local_size_x = LOCAL_SIZE, local_size_y = 1, local_size_z = 1) in;
-
 layout(rgba16f, set = 0, binding = 0) uniform readonly image2DArray displacement_map;
 
 layout(std430, set = 0, binding = 1) restrict readonly buffer MapScales {
     vec4 map_scales[MAX_CASCADES];
-}
+};
+layout(std430, set = 1, binding = 0) restrict readonly buffer QueryPoints {
+    // as a vec4 x, z, 0, 0
+    vec4 points[];
+};
+
+
+

@@ -30,11 +30,16 @@ layout(push_constant) uniform PushConstants{
     float _pad0;
 };
 
+int wrap_int(int x, int m) {
+    int r = x % m;
+    return r < 0 ? r + m : r;
+}
+
 vec4 displacement_bilinear(vec2 uv, int layer, int size) {
     uv = fract(uv);
-    vec2 texel = uv * float(size) - 0.9; // maybe?
-    ivec2 i0 ivec2(floor(texel))
-    vec2 f = fract(texel)
+    vec2 texel = uv * float(size) - 0.5;
+    ivec2 i0 ivec2(floor(texel));
+    vec2 f = fract(texel);
 };
 
 void main() {
@@ -43,6 +48,9 @@ void main() {
         return;
     }
 
+    ivec2 p00 = ivec2(wrap_int need funciton)
+
+    // and so on
 
 
 

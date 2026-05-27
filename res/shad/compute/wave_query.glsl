@@ -35,7 +35,8 @@ void main() {
 
 
 
-    
+    vec3 normal = normalize(vec3(-dhdx, 1.0, -dhdz)); // TODO later cant be bothered rn
+    results[idx] = vec4(water_y + height, normal)
 }
 
 

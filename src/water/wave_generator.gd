@@ -24,7 +24,6 @@ func init_gpu(num_cascades : int) -> void:
 	var transpose_shader := context.load_shader('./res/shad/compute/transpose.glsl')
 	var fft_unpack_shader := context.load_shader('./res/shad/compute/fft_unpack.glsl')
 
-	# --- DESCRIPTOR PREPARATION ---
 	var dims := Vector2i(map_size, map_size)
 	var num_fft_stages := int(log(map_size) / log(2))
 

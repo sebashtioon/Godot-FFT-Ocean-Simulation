@@ -97,7 +97,7 @@ water = NodePath("water")
 environment = SubResource("Environment_icybu")
 
 [node name="sun" type="DirectionalLight3D" parent="." unique_id=493675174]
-transform = Transform3D(0.945601, -0.0516921, 0.321197, -0.00840572, 0.983084, 0.18296, -0.325221, -0.175707, 0.929171, 0, 10, 0)
+transform = Transform3D(0.9456009, -0.19584058, 0.25978065, -0.00840573, 0.78353965, 0.6212846, -0.325221, -0.5896705, 0.73927, 0, 10, 0)
 shadow_bias = 0.0
 shadow_normal_bias = 6.464
 shadow_opacity = 0.8

@@ -96,11 +96,9 @@ void main() {
         float dh_du = (hpx - hmx) / (2.0 * inv_map_size);
         float dh_dv = (hpz - hmz) / (2.0 * inv_map_size);
 
-        dhdx += 
-        dhdz += 
+        dhdx += dh_du * scales.x;
+        dhdz += dh_dv * scales.y;
     }
-
-
 
     vec3 normal = normalize(vec3(-dhdx, 1.0, -dhdz)); // TODO later cant be bothered rn
     results[idx] = vec4(water_y + height, normal)

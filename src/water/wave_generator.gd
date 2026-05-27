@@ -1,6 +1,5 @@
 @tool
 class_name WaveGenerator extends Node
-## Handles the compute pipeline for wave spectra generation/FFT.
 
 const G := 9.81
 const DEPTH := 20.0
@@ -15,7 +14,7 @@ var descriptors : Dictionary
 var _gpu_num_cascades := 0
 
 func init_gpu(num_cascades : int) -> void:
-	# --- DEVICE/SHADER CREATION ---
+	# device/shader creation
 	if not context: context = RenderingContext.create(RenderingServer.get_rendering_device())
 	var spectrum_compute_shader := context.load_shader('./res/shad/compute/spectrum_compute.glsl')
 	var fft_butterfly_shader := context.load_shader('./res/shad/compute/fft_butterfly.glsl')
@@ -31,6 +30,7 @@ func init_gpu(num_cascades : int) -> void:
 	# Spectrum is written once per parameter change and then read every sim step; RGBA16F is plenty.
 	descriptors[&'spectrum'] = context.create_texture(dims, RenderingDevice.DATA_FORMAT_R16G16B16A16_SFLOAT, RenderingDevice.TEXTURE_USAGE_STORAGE_BIT, num_cascades)
 	descriptors[&'butterfly_factors'] = context.create_storage_buffer(num_fft_stages*map_size * 4 * 4)
+	
 	# Reuse a single FFT buffer across cascades (we update one cascade at a time).
 	# Size: map_size^2 * NUM_SPECTRA * 2 (ping-pong) * sizeof(vec2)
 	var fft_buffer_bytes := map_size * map_size * NUM_SPECTRA * 2 * BYTES_PER_VEC2
@@ -45,16 +45,16 @@ func init_gpu(num_cascades : int) -> void:
 	[descriptors[&'butterfly_factors'], descriptors[&'fft_buffer']],
 	fft_compute_shader,
 	1)
+	
 	var transpose_set := context.create_descriptor_set([descriptors[&'fft_buffer']], transpose_shader, 0)
 	var fft_buffer_write_set := context.create_descriptor_set([descriptors[&'fft_buffer']], spectrum_modulate_shader, 1)
 	var fft_buffer_read_set := context.create_descriptor_set([descriptors[&'fft_buffer']], fft_unpack_shader, 1)
 	var unpack_set := context.create_descriptor_set([descriptors[&'displacement_map'], descriptors[&'normal_map']], fft_unpack_shader, 0)
 
-	# --- COMPUTE PIPELINE CREATION ---
+	# compute pipeline
 	pipelines[&'spectrum_compute'] = context.create_pipeline([map_size >> 4, map_size >> 4, 1], [spectrum_set], spectrum_compute_shader)
 	pipelines[&'spectrum_modulate'] = context.create_pipeline([map_size >> 4, map_size >> 4, 1], [spectrum_read_set, fft_buffer_write_set], spectrum_modulate_shader)
-	# Note: Some shaders only declare resources in set=1 (no set=0). Our pipeline binder uses
-	# the array index as the shader set index, so we pass a sparse array and skip invalid RIDs.
+
 	pipelines[&'fft_butterfly'] = context.create_pipeline([map_size >> 7, num_fft_stages, 1], [RID(), fft_butterfly_set], fft_butterfly_shader)
 	pipelines[&'fft_compute'] = context.create_pipeline([1, map_size, NUM_SPECTRA], [RID(), fft_compute_set], fft_compute_shader)
 	pipelines[&'transpose'] = context.create_pipeline([map_size >> 5, map_size >> 5, NUM_SPECTRA], [transpose_set], transpose_shader)
@@ -95,10 +95,10 @@ func update(delta : float, parameters : Array[WaveCascadeParameters]) -> void:
 	# Advance simulation time for all cascades
 	for i in range(parameters.size()):
 		parameters[i].time += delta
-
+	
 	var compute_list := context.compute_list_begin()
-
-	# Update ALL cascades every frame
+	
+	# Update ALL cascades TODO implement something idk
 	for cascade_index in range(parameters.size()):
 		var params := parameters[cascade_index]
 
@@ -121,3 +121,7 @@ static func JONSWAP_alpha(wind_speed:=20.0, fetch_length:=550e3) -> float:
 # Source: https://wikiwaves.org/Ocean-Wave_Spectra#JONSWAP_Spectrum
 static func JONSWAP_peak_angular_frequency(wind_speed:=20.0, fetch_length:=550e3) -> float:
 	return 22.0 * pow(G*G / (wind_speed*fetch_length), 1.0/3.0)
+
+
+
+# i am graphics porgrammer

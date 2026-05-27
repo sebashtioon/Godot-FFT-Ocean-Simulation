@@ -80,9 +80,6 @@ void main() {
     uint cascades = min(num_cascades, uint(MAX_CASCADES));
     cascades = min(cascades, uint(layer_count));
 
-
-
-    // need to iterate throgh cascades
     for (uint i = 0U; i < cascades; ++i) {
         vec4 scales = map_scales[i];
         vec2 uv = world_xz * scales.xy;
@@ -92,12 +89,12 @@ void main() {
 
         float hpx = displacement_bilinear(uv + vec2(inv_map_size, 0.0), int(i), map_size).y * scales.z;
         float hmx = displacement_bilinear(uv - vec2(inv_map_size, 0.0), int(i), map_size).y * scales.z;
-        float hpz = displacement_bilinear(uv + vec2(inv_map_size, 0.0), int(i), map_size).y * scales.z;
-        float hmz = displacement_bilinear(uv - vec2(inv_map_size, 0.0), int(i), map_size).y * scales.z;
+        float hpz = displacement_bilinear(uv + vec2(0.0, inv_map_size), int(i), map_size).y * scales.z;
+        float hmz = displacement_bilinear(uv - vec2(0.0, inv_map_size), int(i), map_size).y * scales.z;
 
 
         float dh_du = (hpx - hmx) / (2.0 * inv_map_size);
-        float dh_du = (hpz - hmz) / (2.0 * inv_map_size);
+        float dh_dv = (hpz - hmz) / (2.0 * inv_map_size);
 
         dhdx += 
         dhdz += 

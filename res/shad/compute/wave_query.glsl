@@ -51,7 +51,9 @@ vec4 displacement_bilinear(vec2 uv, int layer, int size) {
     vec4 c01 = imageLoad(displacement_map, ivec3(p01, layer));
     vec4 c11 = imageLoad(displacement_map, ivec3(p11, layer));
 
-    vec4
+    vec4 cx0 = mix(c00, c10, f.x);
+    vec4 cx1 = mix(c01, c11, f.x);
+    return mix(cx0, cx1, f.y);
 
 };
 

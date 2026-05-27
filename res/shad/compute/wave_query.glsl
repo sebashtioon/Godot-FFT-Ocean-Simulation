@@ -90,8 +90,14 @@ void main() {
         float h0 = displacement_bilinear(uv, int(i), map_size).y * scales.z;
         height += h0;
 
-        float hpx = displacement_bilinear(uv + vec2(inv))
+        float hpx = displacement_bilinear(uv + vec2(inv_map_size, 0.0), int(i), map_size).y * scales.z;
+        float hmx = displacement_bilinear(uv - vec2(inv_map_size, 0.0), int(i), map_size).y * scales.z;
+        float hpz = displacement_bilinear(uv + vec2(inv_map_size, 0.0), int(i), map_size).y * scales.z;
+        float hmz = displacement_bilinear(uv - vec2(inv_map_size, 0.0), int(i), map_size).y * scales.z;
 
+
+        float dh_du = (hpx - hmx) / (2.0 * inv_map_size);
+        float dh_du = (hpz - hmz) / (2.0 * inv_map_size);
 
         dhdx += 
         dhdz += 

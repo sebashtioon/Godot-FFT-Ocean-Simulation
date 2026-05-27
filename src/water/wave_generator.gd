@@ -54,13 +54,12 @@ func init_gpu(num_cascades : int) -> void:
 	# compute pipeline
 	pipelines[&'spectrum_compute'] = context.create_pipeline([map_size >> 4, map_size >> 4, 1], [spectrum_set], spectrum_compute_shader)
 	pipelines[&'spectrum_modulate'] = context.create_pipeline([map_size >> 4, map_size >> 4, 1], [spectrum_read_set, fft_buffer_write_set], spectrum_modulate_shader)
-
 	pipelines[&'fft_butterfly'] = context.create_pipeline([map_size >> 7, num_fft_stages, 1], [RID(), fft_butterfly_set], fft_butterfly_shader)
 	pipelines[&'fft_compute'] = context.create_pipeline([1, map_size, NUM_SPECTRA], [RID(), fft_compute_set], fft_compute_shader)
 	pipelines[&'transpose'] = context.create_pipeline([map_size >> 5, map_size >> 5, NUM_SPECTRA], [transpose_set], transpose_shader)
 	pipelines[&'fft_unpack'] = context.create_pipeline([map_size >> 4, map_size >> 4, 1], [unpack_set, fft_buffer_read_set], fft_unpack_shader)
 
-	# We only need to generate butterfly factors once for each map_size.
+	# We only need to generate butterfly factors once for each map_size
 	var compute_list := context.compute_list_begin()
 	pipelines[&'fft_butterfly'].call(context, compute_list)
 	context.compute_list_end()
@@ -88,10 +87,9 @@ func _update(compute_list : int, cascade_index : int, parameters : Array[WaveCas
 
 func update(delta : float, parameters : Array[WaveCascadeParameters]) -> void:
 	assert(parameters.size() != 0)
-
 	if not context:
 		init_gpu(maxi(2, len(parameters)))
-
+	
 	# Advance simulation time for all cascades
 	for i in range(parameters.size()):
 		parameters[i].time += delta
@@ -101,13 +99,11 @@ func update(delta : float, parameters : Array[WaveCascadeParameters]) -> void:
 	# Update ALL cascades TODO implement something idk
 	for cascade_index in range(parameters.size()):
 		var params := parameters[cascade_index]
-
-		# Foam integration
+		# foam
 		params.foam_grow_rate = delta * params.foam_amount * 7.5
-		params.foam_decay_rate = delta * maxf(0.5, 10.0 - params.foam_amount) * 1.15
-
+		params.foam_decay_rate = delta * maxf(0.5, 10.0 - params.foam_amount) * 1.1
 		_update(compute_list, cascade_index, parameters)
-
+	
 	context.compute_list_end()
 
 func _notification(what):

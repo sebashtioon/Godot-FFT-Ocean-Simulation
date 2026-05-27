@@ -70,6 +70,22 @@ void main() {
 
     vec2 world_xz = points[idx].xy;
 
+    float height = 0.0;
+    float dhdx = 0.0;
+    float dhdz = 0.0;
+
+
+    uint cascades = min(num_cascades, uint(MAX_CASCADES));
+    cascades = min(cascades, uint(layer_count));
+
+
+
+    // need to iterate throgh cascades
+    for (uint i = 0U; i < cascades; ++i) {
+        dhdx += 
+        dhdz += 
+    }
+
 
 
     vec3 normal = normalize(vec3(-dhdx, 1.0, -dhdz)); // TODO later cant be bothered rn

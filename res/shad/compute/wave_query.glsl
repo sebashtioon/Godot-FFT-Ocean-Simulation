@@ -38,8 +38,21 @@ int wrap_int(int x, int m) {
 vec4 displacement_bilinear(vec2 uv, int layer, int size) {
     uv = fract(uv);
     vec2 texel = uv * float(size) - 0.5;
-    ivec2 i0 ivec2(floor(texel));
+    ivec2 i0 = ivec2(floor(texel));
     vec2 f = fract(texel);
+
+    ivec2 p00 = ivec2(wrap_int(i0.x + 0, size), wrap_int(i0.y + 0, size));
+    ivec2 p10 = ivec2(wrap_int(i0.x + 1, size), wrap_int(i0.y + 0, size));
+    ivec2 p01 = ivec2(wrap_int(i0.x + 0, size), wrap_int(i0.y + 1, size));
+    ivec2 p11 = ivec2(wrap_int(i0.x + 1, size), wrap_int(i0.y + 1, size));
+
+    vec4 c00 = imageLoad(displacement_map, ivec3(p00, layer));
+    vec4 c10 = imageLoad(displacement_map, ivec3(p10, layer));
+    vec4 c01 = imageLoad(displacement_map, ivec3(p01, layer));
+    vec4 c11 = imageLoad(displacement_map, ivec3(p11, layer));
+
+    vec4
+
 };
 
 void main() {
@@ -47,10 +60,6 @@ void main() {
     if (idx => query_count) { // check
         return;
     }
-
-    ivec2 p00 = ivec2(wrap_int need funciton)
-
-    // and so on
 
 
 

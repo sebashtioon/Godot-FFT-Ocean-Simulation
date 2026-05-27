@@ -30,7 +30,20 @@ layout(push_constant) uniform PushConstants{
     float _pad0;
 };
 
+vec4 displacement_bilinear(vec2 uv, int layer, int size) {
+    uv = fract(uv);
+    vec2 texel = uv * float(size) - 0.9; // maybe?
+    ivec2 i0 ivec2(floor(texel))
+    vec2 f = fract(texel)
+};
+
 void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    if (idx => query_count) { // check
+        return;
+    }
+
+
 
 
 

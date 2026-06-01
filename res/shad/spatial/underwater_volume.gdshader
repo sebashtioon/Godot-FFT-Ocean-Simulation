@@ -35,22 +35,36 @@ vec3 get_view_position(vec2 screen_uv, mat4 inv_projection_matrix) {
 	return view.xyz;
 }
 
+float god_ray_pattern(vec3 view_dir, vec3 light_dir, float sample_distance) {
+	vec3 ray_space = view_dir * sample_distance * god_ray_scale;
+	ray_space += light_dir * (camera_depth * 1.7 + TIME * god_ray_speed * 12.0);
+	float bands = sin(ray_space.x * 1.35 + ray_space.y * 0.42 + ray_space.z * 0.23);
+	bands += 0.5 * sin(ray_space.x * 2.6 - ray_space.y * 0.7 + ray_space.z * 0.31);
+	bands = bands * 0.5 + 0.5;
+	return smoothstep(god_ray_sharpness, 1.0, bands);
+}
+
 float god_rays(vec3 view_pos, float view_distance, float fog, float depth_factor) {
 	vec3 light_dir = normalize(sun_view_direction);
 	vec3 view_dir = normalize(view_pos);
 	float looking_toward_sun = pow(max(dot(view_dir, -light_dir), 0.0), 1.25);
 
-	vec3 ray_space = view_dir * max(view_distance, 32.0) * god_ray_scale;
-	ray_space += light_dir * (camera_depth * 1.7 + TIME * god_ray_speed * 12.0);
-	float bands = sin(ray_space.x * 1.35 + ray_space.y * 0.42 + ray_space.z * 0.23);
-	bands += 0.5 * sin(ray_space.x * 2.6 - ray_space.y * 0.7 + ray_space.z * 0.31);
-	bands = bands * 0.5 + 0.5;
-	bands = smoothstep(god_ray_sharpness, 1.0, bands);
+	float water_path = max(view_distance, mix(0.0, camera_depth + 32.0, underwater_amount));
+	water_path = clamp(water_path, 0.0, max_distance);
+	float bands = 0.0;
+	for (int i = 0; i < 6; ++i) {
+		float sample_fraction = (float(i) + 0.5) / 6.0;
+		float sample_distance = max(2.0, water_path * sample_fraction);
+		bands += god_ray_pattern(view_dir, light_dir, sample_distance);
+	}
+	bands /= 6.0;
 
-	float surface_rejection = smoothstep(14.0, 45.0, view_distance);
-	float distance_fade = surface_rejection * (1.0 - smoothstep(130.0, max_distance, view_distance));
+	float surface_rejection = smoothstep(2.0, 10.0, water_path);
+	float distance_fade = surface_rejection * (1.0 - smoothstep(130.0, max_distance, water_path));
 	float depth_fade = 1.0 - smoothstep(0.75, 1.0, depth_factor);
-	return bands * looking_toward_sun * distance_fade * depth_fade * fog * underwater_amount;
+	float water_visibility = underwater_amount;
+	
+	return bands * looking_toward_sun * distance_fade * depth_fade * fog * water_visibility;
 }
 
 void fragment() {

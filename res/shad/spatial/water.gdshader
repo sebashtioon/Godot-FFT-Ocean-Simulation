@@ -66,6 +66,11 @@ vec4 texture_bicubic(in sampler2DArray sampler, in vec3 uvw) {
 }
 
 void fragment() {
+	// Keep the underside visible from below, but hide folded back faces seen from above.
+	if (!FRONT_FACING && CAMERA_POSITION_WORLD.y > VERTEX.y) {
+		discard;
+	}
+
 	float map_size = float(textureSize(normals, 0).x);
 	float dist = length(VERTEX.xz);
 	// Read foam and normal information from normal maps.

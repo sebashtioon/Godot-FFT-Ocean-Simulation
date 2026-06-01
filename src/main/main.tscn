@@ -11,6 +11,7 @@
 [ext_resource type="Material" uid="uid://5xqyddws6rt5" path="res://res/shad mat/mat_spray.tres" id="9_skbf4"]
 [ext_resource type="Texture2D" uid="uid://dtm5tyuh2slqt" path="res://ast/textures/water/sea_spray.png" id="10_spqpo"]
 [ext_resource type="Script" uid="uid://c30k4m4bd42q4" path="res://src/water/buoyant_body.gd" id="11_erw1m"]
+[ext_resource type="Script" uid="uid://ccnno46whmda8" path="res://src/water/underwater_volume.gd" id="12_e8vxx"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_t7jwl"]
 panorama = ExtResource("2_m2cr2")
@@ -129,6 +130,9 @@ shadow_blur = 5.0
 [node name="camera" type="Camera3D" parent="." unique_id=2078057389]
 transform = Transform3D(-0.992966, -0.013804, 0.117596, -2.32831e-10, 0.993181, 0.116584, -0.118404, 0.115764, -0.986195, 1.35044, 10.8978, -31.7831)
 script = ExtResource("4_v2yip")
+
+[node name="underwatervolume" type="MeshInstance3D" parent="camera" unique_id=1194742106]
+script = ExtResource("12_e8vxx")
 
 [node name="water" type="MeshInstance3D" parent="." unique_id=1746932446]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -31)

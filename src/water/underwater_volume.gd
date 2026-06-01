@@ -51,6 +51,8 @@ func _process(_delta : float) -> void:
 	visible = amount > 0.001
 	_material.set_shader_parameter(&"underwater_amount", amount)
 	_material.set_shader_parameter(&"camera_depth", maxf(depth, 0.0))
+	_material.set_shader_parameter(&"camera_world_position", global_position)
+	_material.set_shader_parameter(&"camera_world_basis", global_transform.basis)
 	_update_sun_direction()
 	_update_water_material(amount)
 
@@ -113,8 +115,7 @@ func _update_sun_direction() -> void:
 		return
 
 	var light_world_direction := -_sun.global_transform.basis.z.normalized()
-	var light_view_direction := global_transform.basis.inverse() * light_world_direction
-	_material.set_shader_parameter(&"sun_view_direction", light_view_direction.normalized())
+	_material.set_shader_parameter(&"sun_world_direction", light_world_direction.normalized())
 
 func _update_water_material(underwater_amount : float) -> void:
 	if not (_water is MeshInstance3D):

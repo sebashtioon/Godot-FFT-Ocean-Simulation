@@ -133,6 +133,8 @@ script = ExtResource("4_v2yip")
 
 [node name="underwatervolume" type="MeshInstance3D" parent="camera" unique_id=1194742106]
 script = ExtResource("12_e8vxx")
+water_path = NodePath("../../water")
+sun_path = NodePath("../../sun")
 
 [node name="water" type="MeshInstance3D" parent="." unique_id=1746932446]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -31)

@@ -45,6 +45,7 @@ func _process(_delta : float) -> void:
 		visible = false
 		return
 
+	_update_material_static_params()
 	_update_surface_height()
 	var depth := _surface_height - global_position.y
 	var amount := smoothstep(-transition_margin, transition_margin, depth)

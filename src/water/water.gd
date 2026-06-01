@@ -63,10 +63,13 @@ var next_update_time := 0.0
 var displacement_maps := Texture2DArrayRD.new()
 var normal_maps := Texture2DArrayRD.new()
 
+var _map_scales : PackedVector4Array = PackedVector4Array()
+
 func _init() -> void:
 	rng.set_seed(1234) # This seed gives big waves!
 
 func _ready() -> void:
+	add_to_group(&"water")
 	RenderingServer.global_shader_parameter_set(&'water_color', water_color.srgb_to_linear())
 	RenderingServer.global_shader_parameter_set(&'foam_color', foam_color.srgb_to_linear())
 
@@ -103,9 +106,22 @@ func _update_scales_uniform() -> void:
 		var params := parameters[i]
 		var uv_scale := Vector2.ONE / params.tile_length
 		map_scales[i] = Vector4(uv_scale.x, uv_scale.y, params.displacement_scale, params.normal_scale)
+	_map_scales = map_scales
 	# No global shader parameter for arrays :(
 	WATER_MAT.set_shader_parameter(&'map_scales', map_scales)
 	SPRAY_MAT.set_shader_parameter(&'map_scales', map_scales)
+
+func sample_surface(world_xz : PackedVector2Array) -> PackedVector4Array:
+	# Returns vec4(height, normal.xyz) per input point.
+	if world_xz.is_empty():
+		return PackedVector4Array()
+	if wave_generator == null:
+		_setup_wave_generator()
+	if wave_generator == null:
+		return PackedVector4Array()
+	if _map_scales.is_empty():
+		_update_scales_uniform()
+	return wave_generator.query_surface(world_xz, _map_scales, global_position.y, parameters.size())
 
 func _update_water(delta : float) -> void:
 	if wave_generator == null: _setup_wave_generator()

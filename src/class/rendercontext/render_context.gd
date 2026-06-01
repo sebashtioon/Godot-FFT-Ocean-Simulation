@@ -45,10 +45,19 @@ func _notification(what):
 			device.free()
 
 func submit() -> void:
+	# Godot forbids calling submit/sync on the main RenderingDevice.
+	# The main device is submitted by the engine; only local devices can be submitted manually.
+	var main_device := RenderingServer.get_rendering_device()
+	if main_device != null and device == main_device:
+		return
 	device.submit()
 	needs_sync = true
 
 func sync() -> void:
+	# Only local RenderingDevices can sync.
+	var main_device := RenderingServer.get_rendering_device()
+	if main_device != null and device == main_device:
+		return
 	device.sync()
 	needs_sync = false
 

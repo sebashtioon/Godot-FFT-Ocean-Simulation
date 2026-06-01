@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://codimsqgl1lsi"
+path="res://.godot/imported/wave_query.glsl-448773414f2e192835ccba5c420f9ba5.res"
+
+[deps]
+
+source_file="res://res/shad/compute/wave_query.glsl"
+dest_files=["res://.godot/imported/wave_query.glsl-448773414f2e192835ccba5c420f9ba5.res"]
+
+[params]
+

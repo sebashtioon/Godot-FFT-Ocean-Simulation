@@ -1,15 +1,16 @@
-[gd_scene format=3 uid="uid://dx4r13gqfh13"]
+[gd_scene format=4 uid="uid://dx4r13gqfh13"]
 
 [ext_resource type="Script" uid="uid://dpbs4pty86lnm" path="res://src/main/main.gd" id="1_skarq"]
 [ext_resource type="Texture2D" uid="uid://cxl006vbsasmw" path="res://ast/textures/skies/skybox.exr" id="2_m2cr2"]
 [ext_resource type="Script" uid="uid://bd220u1qvp8wj" path="res://src/water/wave_cascade_parameters.gd" id="2_pw5n6"]
 [ext_resource type="Script" uid="uid://cwlaw2y0ilprj" path="res://src/camera/camera.gd" id="4_v2yip"]
+[ext_resource type="ArrayMesh" uid="uid://mkodygt504hm" path="res://ast/models/water/clipmap_low.obj" id="5_erw1m"]
 [ext_resource type="Material" uid="uid://byumtcccq4ew3" path="res://res/shad mat/mat_water.tres" id="5_lt75t"]
-[ext_resource type="ArrayMesh" uid="uid://ix4vp1y05f1s" path="res://ast/models/water/clipmap_high.obj" id="5_n61pp"]
 [ext_resource type="Script" uid="uid://dhqd3jv6jlr1c" path="res://src/water/water.gd" id="7_s0x5e"]
 [ext_resource type="Shader" uid="uid://da2q0mpjalw0j" path="res://res/shad/spatial/sea_spray.gdshader" id="8_eu8jb"]
 [ext_resource type="Material" uid="uid://5xqyddws6rt5" path="res://res/shad mat/mat_spray.tres" id="9_skbf4"]
 [ext_resource type="Texture2D" uid="uid://dtm5tyuh2slqt" path="res://ast/textures/water/sea_spray.png" id="10_spqpo"]
+[ext_resource type="Script" uid="uid://c30k4m4bd42q4" path="res://src/water/buoyant_body.gd" id="11_erw1m"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_t7jwl"]
 panorama = ExtResource("2_m2cr2")
@@ -88,6 +89,28 @@ shader_parameter/dissolve_texture = SubResource("NoiseTexture2D_tsx6q")
 
 [sub_resource type="QuadMesh" id="QuadMesh_06d3e"]
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_erw1m"]
+albedo_color = Color(1, 0, 0, 1)
+metallic = 0.6
+roughness = 0.13
+
+[sub_resource type="BoxMesh" id="BoxMesh_erw1m"]
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_erw1m"]
+_surfaces = [{
+"aabb": AABB(-0.5288675, -0.5288675, -0.5288675, 1.057735, 1.057735, 1.057735),
+"attribute_data": PackedByteArray("AAAAAAAAAACrqio/AAAAAKuqqj4AAAAAAACAPwAAAAAAAAAAAAAAP6uqKj8AAAA/q6qqPgAAAD8AAIA/AAAAP6uqqj4AAAAAAAAAAAAAAD+rqio/AAAAAKuqqj4AAAA/q6qqPgAAAD8AAAAAAACAP6uqKj8AAAA/q6qqPgAAgD+rqqo+AAAAP6uqKj8AAAA/q6oqPwAAAD8AAIA/AAAAP6uqqj4AAIA/q6oqPwAAgD+rqio/AACAPwAAgD8AAIA/"),
+"format": 34359742487,
+"index_count": 36,
+"index_data": PackedByteArray("AAAEAAIAAgAEAAYAAQAFAAMAAwAFAAcACAAMAAoACgAMAA4ACQANAAsACwANAA8AEAAUABIAEgAUABYAEQAVABMAEwAVABcA"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("3GMHv9xjBz/cYwc/3GMHP9xjBz/cYwe/3GMHP9xjBz/cYwc/3GMHv9xjBz/cYwe/3GMHv9xjB7/cYwc/3GMHP9xjB7/cYwe/3GMHP9xjB7/cYwc/3GMHv9xjB7/cYwe/3GMHP9xjBz/cYwc/3GMHv9xjBz/cYwe/3GMHP9xjBz/cYwe/3GMHv9xjBz/cYwc/3GMHP9xjB7/cYwc/3GMHv9xjB7/cYwe/3GMHP9xjB7/cYwe/3GMHv9xjB7/cYwc/3GMHP9xjBz/cYwc/3GMHv9xjB7/cYwc/3GMHv9xjBz/cYwc/3GMHP9xjB7/cYwc/3GMHP9xjBz/cYwe/3GMHv9xjB7/cYwe/3GMHv9xjBz/cYwe/3GMHP9xjB7/cYwe//3//f////7//////AAD/v/9//3////+//////wAA/7//f/9/////v/////8AAP+//3//f////7//////AAD/v///AID/////AAAAgP9//7///wCA/////wAAAID/f/+///8AgP////8AAACA/3//v///AID/////AAAAgP9//78AgP//AAD/vwCAAAD///+/AID//wAA/78AgAAA////vwCA//8AAP+/AIAAAP///78AgP//AAD/vwCAAAD///+/")
+}]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_w0wra"]
+
 [node name="world" type="Node3D" unique_id=1756858251 node_paths=PackedStringArray("camera", "water")]
 script = ExtResource("1_skarq")
 camera = NodePath("camera")
@@ -112,12 +135,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -31)
 sorting_offset = 999.0
 material_override = ExtResource("5_lt75t")
 cast_shadow = 0
-mesh = ExtResource("5_n61pp")
+mesh = ExtResource("5_erw1m")
 skeleton = NodePath("")
 script = ExtResource("7_s0x5e")
 water_color = Color(0.0702554, 0.14344, 0.200377, 1)
 foam_color = Color(0.733086, 0.700799, 0.656594, 1)
 parameters = Array[ExtResource("2_pw5n6")]([SubResource("Resource_adqv5"), SubResource("Resource_luhq0"), SubResource("Resource_83u3u")])
+map_size = 256
+mesh_quality = 0
 
 [node name="watersprayemitter" type="GPUParticles3D" parent="water" unique_id=1135780755]
 transform = Transform3D(15, 0, 0, 0, 15, 0, 0, 0, 15, 0, 0, 0)
@@ -127,3 +152,195 @@ amount = 32768
 lifetime = 6.0
 process_material = ExtResource("9_skbf4")
 draw_pass_1 = SubResource("QuadMesh_06d3e")
+
+[node name="RigidBody3D" type="RigidBody3D" parent="." unique_id=1217351926 node_paths=PackedStringArray("marker_parent_path")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.538515, 0)
+mass = 10.0
+script = ExtResource("11_erw1m")
+water_path = NodePath("../water")
+marker_parent_path = NodePath("points")
+equilibrium_depth = 1.21
+buoyancy_multiplier = 7.4
+vertical_damping = 3.11
+linear_drag = 9.58
+angular_drag = 4.91
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RigidBody3D" unique_id=882147975]
+material_override = SubResource("StandardMaterial3D_erw1m")
+mesh = SubResource("BoxMesh_erw1m")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RigidBody3D/MeshInstance3D" unique_id=1187092380]
+mesh = SubResource("ArrayMesh_erw1m")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RigidBody3D" unique_id=1558814666]
+shape = SubResource("BoxShape3D_w0wra")
+
+[node name="points" type="Node3D" parent="RigidBody3D" unique_id=1066267187]
+
+[node name="Marker3D" type="Marker3D" parent="RigidBody3D/points" unique_id=672041058]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.47483432, -0.50547695, -0.5342067)
+
+[node name="Marker3D2" type="Marker3D" parent="RigidBody3D/points" unique_id=1063346694]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.47483432, -0.50547695, 0.507075)
+
+[node name="Marker3D3" type="Marker3D" parent="RigidBody3D/points" unique_id=1186527539]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.47483432, 0.50547695, -0.5342067)
+
+[node name="Marker3D4" type="Marker3D" parent="RigidBody3D/points" unique_id=2058248971]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.47483432, 0.50547695, 0.507075)
+
+[node name="Marker3D5" type="Marker3D" parent="RigidBody3D/points" unique_id=1551946551]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.50603306, -0.50547695, -0.5342067)
+
+[node name="Marker3D6" type="Marker3D" parent="RigidBody3D/points" unique_id=2104747002]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.50603306, -0.50547695, 0.507075)
+
+[node name="Marker3D7" type="Marker3D" parent="RigidBody3D/points" unique_id=1479129197]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.50603306, 0.50547695, -0.5342067)
+
+[node name="Marker3D8" type="Marker3D" parent="RigidBody3D/points" unique_id=1827998560]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.50603306, 0.50547695, 0.507075)
+
+[node name="RigidBody3D2" type="RigidBody3D" parent="." unique_id=313018526 node_paths=PackedStringArray("marker_parent_path")]
+transform = Transform3D(0.8630255, 0.5051604, 0, -0.5051604, 0.8630255, 0, 0, 0, 1, 0, 11.190636, 0)
+mass = 10.0
+script = ExtResource("11_erw1m")
+water_path = NodePath("../water")
+marker_parent_path = NodePath("points")
+equilibrium_depth = 1.21
+buoyancy_multiplier = 7.4
+vertical_damping = 3.11
+linear_drag = 9.58
+angular_drag = 4.91
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RigidBody3D2" unique_id=1836320060]
+material_override = SubResource("StandardMaterial3D_erw1m")
+mesh = SubResource("BoxMesh_erw1m")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RigidBody3D2/MeshInstance3D" unique_id=1641426960]
+mesh = SubResource("ArrayMesh_erw1m")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RigidBody3D2" unique_id=1432425209]
+shape = SubResource("BoxShape3D_w0wra")
+
+[node name="points" type="Node3D" parent="RigidBody3D2" unique_id=1834707381]
+
+[node name="Marker3D" type="Marker3D" parent="RigidBody3D2/points" unique_id=400466838]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.47483432, -0.50547695, -0.5342067)
+
+[node name="Marker3D2" type="Marker3D" parent="RigidBody3D2/points" unique_id=2027539200]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.47483432, -0.50547695, 0.507075)
+
+[node name="Marker3D3" type="Marker3D" parent="RigidBody3D2/points" unique_id=138172838]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.47483432, 0.50547695, -0.5342067)
+
+[node name="Marker3D4" type="Marker3D" parent="RigidBody3D2/points" unique_id=1076561758]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.47483432, 0.50547695, 0.507075)
+
+[node name="Marker3D5" type="Marker3D" parent="RigidBody3D2/points" unique_id=913044697]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.50603306, -0.50547695, -0.5342067)
+
+[node name="Marker3D6" type="Marker3D" parent="RigidBody3D2/points" unique_id=135940392]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.50603306, -0.50547695, 0.507075)
+
+[node name="Marker3D7" type="Marker3D" parent="RigidBody3D2/points" unique_id=944331032]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.50603306, 0.50547695, -0.5342067)
+
+[node name="Marker3D8" type="Marker3D" parent="RigidBody3D2/points" unique_id=1274559531]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.50603306, 0.50547695, 0.507075)
+
+[node name="RigidBody3D3" type="RigidBody3D" parent="." unique_id=2004242265 node_paths=PackedStringArray("marker_parent_path")]
+transform = Transform3D(0.8630255, 0.5051604, 0, -0.5051604, 0.8630255, 0, 0, 0, 1, 1.404433, 9.399107, 0)
+mass = 10.0
+script = ExtResource("11_erw1m")
+water_path = NodePath("../water")
+marker_parent_path = NodePath("points")
+equilibrium_depth = 1.21
+buoyancy_multiplier = 7.4
+vertical_damping = 3.11
+linear_drag = 9.58
+angular_drag = 4.91
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RigidBody3D3" unique_id=1927604820]
+material_override = SubResource("StandardMaterial3D_erw1m")
+mesh = SubResource("BoxMesh_erw1m")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RigidBody3D3/MeshInstance3D" unique_id=38300443]
+mesh = SubResource("ArrayMesh_erw1m")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RigidBody3D3" unique_id=376959062]
+shape = SubResource("BoxShape3D_w0wra")
+
+[node name="points" type="Node3D" parent="RigidBody3D3" unique_id=445214878]
+
+[node name="Marker3D" type="Marker3D" parent="RigidBody3D3/points" unique_id=1614684052]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.47483432, -0.50547695, -0.5342067)
+
+[node name="Marker3D2" type="Marker3D" parent="RigidBody3D3/points" unique_id=421450376]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.47483432, -0.50547695, 0.507075)
+
+[node name="Marker3D3" type="Marker3D" parent="RigidBody3D3/points" unique_id=259701809]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.47483432, 0.50547695, -0.5342067)
+
+[node name="Marker3D4" type="Marker3D" parent="RigidBody3D3/points" unique_id=489069572]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.47483432, 0.50547695, 0.507075)
+
+[node name="Marker3D5" type="Marker3D" parent="RigidBody3D3/points" unique_id=2130996828]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.50603306, -0.50547695, -0.5342067)
+
+[node name="Marker3D6" type="Marker3D" parent="RigidBody3D3/points" unique_id=796458260]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.50603306, -0.50547695, 0.507075)
+
+[node name="Marker3D7" type="Marker3D" parent="RigidBody3D3/points" unique_id=284030282]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.50603306, 0.50547695, -0.5342067)
+
+[node name="Marker3D8" type="Marker3D" parent="RigidBody3D3/points" unique_id=1169270777]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.50603306, 0.50547695, 0.507075)
+
+[node name="RigidBody3D4" type="RigidBody3D" parent="." unique_id=488157764 node_paths=PackedStringArray("marker_parent_path")]
+transform = Transform3D(0.8630255, 0.5051604, 0, -0.5051604, 0.8630255, 0, 0, 0, 1, -2.0199046, 9.390756, 0)
+mass = 10.0
+script = ExtResource("11_erw1m")
+water_path = NodePath("../water")
+marker_parent_path = NodePath("points")
+equilibrium_depth = 1.21
+buoyancy_multiplier = 7.4
+vertical_damping = 3.11
+linear_drag = 9.58
+angular_drag = 4.91
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RigidBody3D4" unique_id=236455426]
+material_override = SubResource("StandardMaterial3D_erw1m")
+mesh = SubResource("BoxMesh_erw1m")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RigidBody3D4/MeshInstance3D" unique_id=1056203878]
+mesh = SubResource("ArrayMesh_erw1m")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RigidBody3D4" unique_id=144613461]
+shape = SubResource("BoxShape3D_w0wra")
+
+[node name="points" type="Node3D" parent="RigidBody3D4" unique_id=694456201]
+
+[node name="Marker3D" type="Marker3D" parent="RigidBody3D4/points" unique_id=2009877916]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.47483432, -0.50547695, -0.5342067)
+
+[node name="Marker3D2" type="Marker3D" parent="RigidBody3D4/points" unique_id=883896805]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.47483432, -0.50547695, 0.507075)
+
+[node name="Marker3D3" type="Marker3D" parent="RigidBody3D4/points" unique_id=1301726093]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.47483432, 0.50547695, -0.5342067)
+
+[node name="Marker3D4" type="Marker3D" parent="RigidBody3D4/points" unique_id=750428330]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.47483432, 0.50547695, 0.507075)
+
+[node name="Marker3D5" type="Marker3D" parent="RigidBody3D4/points" unique_id=970505207]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.50603306, -0.50547695, -0.5342067)
+
+[node name="Marker3D6" type="Marker3D" parent="RigidBody3D4/points" unique_id=1751292003]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.50603306, -0.50547695, 0.507075)
+
+[node name="Marker3D7" type="Marker3D" parent="RigidBody3D4/points" unique_id=1623240079]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.50603306, 0.50547695, -0.5342067)
+
+[node name="Marker3D8" type="Marker3D" parent="RigidBody3D4/points" unique_id=482970467]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.50603306, 0.50547695, 0.507075)

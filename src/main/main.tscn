@@ -138,7 +138,6 @@ script = ExtResource("12_e8vxx")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -31)
 sorting_offset = 999.0
 material_override = ExtResource("5_lt75t")
-transparency = 0.17
 cast_shadow = 0
 mesh = ExtResource("5_erw1m")
 skeleton = NodePath("")

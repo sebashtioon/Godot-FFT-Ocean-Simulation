@@ -10,6 +10,7 @@
 [ext_resource type="Shader" uid="uid://da2q0mpjalw0j" path="res://res/shad/spatial/sea_spray.gdshader" id="8_eu8jb"]
 [ext_resource type="Material" uid="uid://5xqyddws6rt5" path="res://res/shad mat/mat_spray.tres" id="9_skbf4"]
 [ext_resource type="Texture2D" uid="uid://dtm5tyuh2slqt" path="res://ast/textures/water/sea_spray.png" id="10_spqpo"]
+[ext_resource type="Script" uid="uid://c30k4m4bd42q4" path="res://src/water/buoyant_body.gd" id="11_erw1m"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_t7jwl"]
 panorama = ExtResource("2_m2cr2")
@@ -88,6 +89,10 @@ shader_parameter/dissolve_texture = SubResource("NoiseTexture2D_tsx6q")
 
 [sub_resource type="QuadMesh" id="QuadMesh_06d3e"]
 
+[sub_resource type="BoxMesh" id="BoxMesh_erw1m"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_w0wra"]
+
 [node name="world" type="Node3D" unique_id=1756858251 node_paths=PackedStringArray("camera", "water")]
 script = ExtResource("1_skarq")
 camera = NodePath("camera")
@@ -127,3 +132,14 @@ amount = 32768
 lifetime = 6.0
 process_material = ExtResource("9_skbf4")
 draw_pass_1 = SubResource("QuadMesh_06d3e")
+
+[node name="RigidBody3D" type="RigidBody3D" parent="." unique_id=1217351926]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.538515, 0)
+script = ExtResource("11_erw1m")
+water_path = NodePath("../water")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RigidBody3D" unique_id=882147975]
+mesh = SubResource("BoxMesh_erw1m")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RigidBody3D" unique_id=1558814666]
+shape = SubResource("BoxShape3D_w0wra")

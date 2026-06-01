@@ -9,12 +9,13 @@ var should_render_imgui := not Engine.is_editor_hint()
 @export var camera : Camera3D
 @export var water : MeshInstance3D
 
+@onready var water_spray_emitter : GPUParticles3D = water.get_node_or_null(^"watersprayemitter")
 
 @onready var _camera_fov := [camera.fov]
 @onready var _updates_per_second := [water.updates_per_second]
 @onready var _water_color := [water.water_color.r, water.water_color.g, water.water_color.b]
 @onready var _foam_color := [water.foam_color.r, water.foam_color.g, water.foam_color.b]
-@onready var _is_sea_spray_visible := [true]
+@onready var _is_sea_spray_visible := [water_spray_emitter.visible if water_spray_emitter else false]
 
 func _init() -> void:
 	if Engine.is_editor_hint():
@@ -84,7 +85,8 @@ func _render_imgui_ocean(fps: int, mesh_quality_keys: Array) -> void:
 	ImGui.Text('Enable Sea Spray:  ')
 	ImGui.SameLine()
 	if ImGui.Checkbox('##sea_spray_checkbox', _is_sea_spray_visible):
-		$Water/WaterSprayEmitter.visible = _is_sea_spray_visible[0]
+		if water_spray_emitter:
+			water_spray_emitter.visible = _is_sea_spray_visible[0]
 	imgui_text_tooltip('Wave Resolution:   ', 'The resolution of the displacement/normal maps used for each wave cascade.\nThis is also the FFT input size.')
 	ImGui.SameLine()
 	if ImGui.BeginCombo('##resolution', '%dx%d' % [water.map_size, water.map_size]):
@@ -128,6 +130,7 @@ func _render_imgui_parameters() -> void:
 	for i in len(water.parameters):
 		var params : WaveCascadeParameters = water.parameters[i]
 		if ImGui.BeginTabItem('Cascade %d' % (i + 1)):
+			ImGui.PushID(StringName('cascade_%d' % i))
 			imgui_text_tooltip('Tile Length:       ', 'Denotes the distance the cascade\'s tile should cover (in meters).')
 			ImGui.SameLine()
 			if ImGui.InputFloat2('##tile_length', params._tile_length):
@@ -178,6 +181,7 @@ func _render_imgui_parameters() -> void:
 			ImGui.SameLine()
 			if ImGui.SliderFloat('##foam_amount', params._foam_amount, 0, 10):
 				params.foam_amount = params._foam_amount[0]
+			ImGui.PopID()
 			ImGui.EndTabItem()
 	ImGui.EndTabBar()
 

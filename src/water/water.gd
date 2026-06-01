@@ -112,7 +112,11 @@ func _update_scales_uniform() -> void:
 	SPRAY_MAT.set_shader_parameter(&'map_scales', map_scales)
 
 func sample_surface(world_xz : PackedVector2Array) -> PackedVector4Array:
+	return sample_surface_for(0, world_xz)
+
+func sample_surface_for(key: int, world_xz : PackedVector2Array) -> PackedVector4Array:
 	# Returns vec4(height, normal.xyz) per input point.
+	# Key is used to keep query buffers separate (e.g. one key per buoyant body).
 	if world_xz.is_empty():
 		return PackedVector4Array()
 	if wave_generator == null:
@@ -121,7 +125,7 @@ func sample_surface(world_xz : PackedVector2Array) -> PackedVector4Array:
 		return PackedVector4Array()
 	if _map_scales.is_empty():
 		_update_scales_uniform()
-	return wave_generator.query_surface(world_xz, _map_scales, global_position.y, parameters.size())
+	return wave_generator.query_surface_async(key, world_xz, _map_scales, global_position.y, parameters.size())
 
 func _update_water(delta : float) -> void:
 	if wave_generator == null: _setup_wave_generator()

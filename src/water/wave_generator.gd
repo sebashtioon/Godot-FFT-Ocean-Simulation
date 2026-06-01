@@ -17,6 +17,18 @@ var descriptors : Dictionary
 
 var _gpu_num_cascades := 0
 
+class WaveQueryState:
+	var points : RenderingContext.Descriptor
+	var results : Array = []
+	var sets1 : Array = []
+	var write_index := 0
+	var has_history := false
+	var last_query_count := 0
+
+var _wave_query_shader : RID
+var _wave_query_set0 : RID
+var _wave_query_states : Dictionary = {}
+
 func init_gpu(num_cascades : int) -> void:
 	# device/shader creation
 	if not context: context = RenderingContext.create(RenderingServer.get_rendering_device())
@@ -27,6 +39,7 @@ func init_gpu(num_cascades : int) -> void:
 	var transpose_shader := context.load_shader('./res/shad/compute/transpose.glsl')
 	var fft_unpack_shader := context.load_shader('./res/shad/compute/fft_unpack.glsl')
 	var wave_query_shader := context.load_shader('./res/shad/compute/wave_query.glsl')
+	_wave_query_shader = wave_query_shader
 
 	var dims := Vector2i(map_size, map_size)
 	var num_fft_stages := int(log(map_size) / log(2))
@@ -59,11 +72,10 @@ func init_gpu(num_cascades : int) -> void:
 	# --- WAVE SAMPLING (BUOYANCY/PHYSICS) ---
 	# map_scales layout matches the material parameter: vec4(uv_scale.xy, displacement_scale, normal_scale)
 	descriptors[&'wave_query_map_scales'] = context.create_storage_buffer(MAX_CASCADES * 16)
-	# Query buffers: vec4(x, z, 0, 0) -> vec4(height, normal.xyz)
-	descriptors[&'wave_query_points'] = context.create_storage_buffer(MAX_WAVE_QUERIES * 16)
-	descriptors[&'wave_query_results'] = context.create_storage_buffer(MAX_WAVE_QUERIES * 16)
 	var wave_query_set0 := context.create_descriptor_set([descriptors[&'displacement_map'], descriptors[&'wave_query_map_scales']], wave_query_shader, 0)
-	var wave_query_set1 := context.create_descriptor_set([descriptors[&'wave_query_points'], descriptors[&'wave_query_results']], wave_query_shader, 1)
+	_wave_query_set0 = wave_query_set0
+	# Create a default query state (key=0) so the pipeline has a valid set=1 by default.
+	var default_query_state := _get_or_create_wave_query_state(0)
 
 	# compute pipeline
 	pipelines[&'spectrum_compute'] = context.create_pipeline([map_size >> 4, map_size >> 4, 1], [spectrum_set], spectrum_compute_shader)
@@ -73,7 +85,7 @@ func init_gpu(num_cascades : int) -> void:
 	pipelines[&'transpose'] = context.create_pipeline([map_size >> 5, map_size >> 5, NUM_SPECTRA], [transpose_set], transpose_shader)
 	pipelines[&'fft_unpack'] = context.create_pipeline([map_size >> 4, map_size >> 4, 1], [unpack_set, fft_buffer_read_set], fft_unpack_shader)
 	var query_groups_x := maxi(1, ceili(float(MAX_WAVE_QUERIES) / float(WAVE_QUERY_LOCAL_SIZE)))
-	pipelines[&'wave_query'] = context.create_pipeline([query_groups_x, 1, 1], [wave_query_set0, wave_query_set1], wave_query_shader)
+	pipelines[&'wave_query'] = context.create_pipeline([query_groups_x, 1, 1], [wave_query_set0, default_query_state.sets1[0]], wave_query_shader)
 
 	# We only need to generate butterfly factors once for each map_size
 	var compute_list := context.compute_list_begin()
@@ -122,8 +134,25 @@ func update(delta : float, parameters : Array[WaveCascadeParameters]) -> void:
 	
 	context.compute_list_end()
 
-func query_surface(world_xz : PackedVector2Array, map_scales : PackedVector4Array, water_y : float, num_cascades : int) -> PackedVector4Array:
-	# Returns vec4(height, normal.xyz) per query point.
+func _get_or_create_wave_query_state(key: int) -> WaveQueryState:
+	if _wave_query_states.has(key):
+		return _wave_query_states[key]
+	var state := WaveQueryState.new()
+	state.points = context.create_storage_buffer(MAX_WAVE_QUERIES * 16)
+	state.results = [
+		context.create_storage_buffer(MAX_WAVE_QUERIES * 16),
+		context.create_storage_buffer(MAX_WAVE_QUERIES * 16),
+	]
+	state.sets1 = [
+		context.create_descriptor_set([state.points, state.results[0]], _wave_query_shader, 1),
+		context.create_descriptor_set([state.points, state.results[1]], _wave_query_shader, 1),
+	]
+	_wave_query_states[key] = state
+	return state
+
+func query_surface_async(key: int, world_xz : PackedVector2Array, map_scales : PackedVector4Array, water_y : float, num_cascades : int) -> PackedVector4Array:
+	# Returns vec4(height, normal.xyz) per query point, but with ~1-call latency.
+	# This avoids forcing a render-thread sync on the same frame.
 	if world_xz.is_empty():
 		return PackedVector4Array()
 	if not context:
@@ -132,9 +161,28 @@ func query_surface(world_xz : PackedVector2Array, map_scales : PackedVector4Arra
 		push_error('WaveGenerator: wave_query pipeline not initialized (init_gpu not called?)')
 		return PackedVector4Array()
 
+	var state := _get_or_create_wave_query_state(key)
 	var query_count := mini(world_xz.size(), MAX_WAVE_QUERIES)
 	if query_count != world_xz.size():
-		push_warning('WaveGenerator: query_surface truncated to %d points (MAX_WAVE_QUERIES=%d).' % [query_count, MAX_WAVE_QUERIES])
+		push_warning('WaveGenerator: query_surface_async truncated to %d points (MAX_WAVE_QUERIES=%d).' % [query_count, MAX_WAVE_QUERIES])
+
+	var write_idx := state.write_index
+	var read_idx := write_idx ^ 1
+	var prev_count := state.last_query_count
+
+	# Read previous results (non-blocking most frames; stalls only if GPU is behind).
+	var out := PackedVector4Array()
+	if state.has_history and prev_count > 0:
+		var raw : PackedByteArray = context.device.buffer_get_data(state.results[read_idx].rid)
+		out.resize(prev_count)
+		for i in range(prev_count):
+			var o := i * 16
+			out[i] = Vector4(raw.decode_float(o + 0), raw.decode_float(o + 4), raw.decode_float(o + 8), raw.decode_float(o + 12))
+	else:
+		# First call: return a sane placeholder so callers can keep running.
+		out.resize(query_count)
+		for i in range(query_count):
+			out[i] = Vector4(water_y, 0.0, 1.0, 0.0)
 
 	# Upload map scales (always upload all MAX_CASCADES entries).
 	var scale_floats := PackedFloat32Array()
@@ -160,26 +208,34 @@ func query_surface(world_xz : PackedVector2Array, map_scales : PackedVector4Arra
 		point_floats[base + 2] = 0.0
 		point_floats[base + 3] = 0.0
 	var point_bytes := point_floats.to_byte_array()
-	context.device.buffer_update(descriptors[&'wave_query_points'].rid, 0, point_bytes.size(), point_bytes)
+	context.device.buffer_update(state.points.rid, 0, point_bytes.size(), point_bytes)
 
-	# Dispatch compute.
+	# Dispatch compute for NEXT frame's results.
 	var push := RenderingContext.create_push_constant([query_count, num_cascades, water_y, 0.0])
 	var compute_list := context.compute_list_begin()
-	pipelines[&'wave_query'].call(context, compute_list, push)
+	pipelines[&'wave_query'].call(context, compute_list, push, [_wave_query_set0, state.sets1[write_idx]])
 	context.compute_list_end()
 
-	# Blocking readback. simple, but it will stall :(  
-	# The main RenderingDevice is submitted by the engine; submit/sync are only valid on local devices
-	# force_sync() makes sure the render thread processes the RD commands before the CPU readback
-	RenderingServer.force_sync()
+	# Update state for next call.
+	state.write_index = read_idx
+	state.has_history = true
+	state.last_query_count = query_count
 
-	var raw : PackedByteArray = context.device.buffer_get_data(descriptors[&'wave_query_results'].rid)
-	var results := PackedVector4Array()
-	results.resize(query_count)
-	for i in range(query_count):
-		var o := i * 16
-		results[i] = Vector4(raw.decode_float(o + 0), raw.decode_float(o + 4), raw.decode_float(o + 8), raw.decode_float(o + 12))
-	return results
+	# Ensure output array matches the current request size.
+	if out.size() != query_count:
+		var resized := PackedVector4Array()
+		resized.resize(query_count)
+		var n := mini(out.size(), query_count)
+		for i in range(n):
+			resized[i] = out[i]
+		for i in range(n, query_count):
+			resized[i] = Vector4(water_y, 0.0, 1.0, 0.0)
+		return resized
+	return out
+
+func query_surface(world_xz : PackedVector2Array, map_scales : PackedVector4Array, water_y : float, num_cascades : int) -> PackedVector4Array:
+	# Backwards compatible wrapper (key=0).
+	return query_surface_async(0, world_xz, map_scales, water_y, num_cascades)
 
 func _notification(what):
 	if what == NOTIFICATION_PREDELETE:

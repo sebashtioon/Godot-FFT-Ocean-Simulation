@@ -32,7 +32,7 @@ func _physics_process(_delta : float) -> void:
 		return
 	if float_point_markers.is_empty():
 		return
-	if not _water.has_method(&"sample_surface"):
+	if not (_water.has_method(&"sample_surface_for") or _water.has_method(&"sample_surface")):
 		return
 
 	var probe_world : Array[Vector3] = []
@@ -44,7 +44,11 @@ func _physics_process(_delta : float) -> void:
 		probe_world[i] = wp
 		query[i] = Vector2(wp.x, wp.z)
 
-	var surface : PackedVector4Array = _water.call(&"sample_surface", query)
+	var surface : PackedVector4Array
+	if _water.has_method(&"sample_surface_for"):
+		surface = _water.call(&"sample_surface_for", get_instance_id(), query)
+	else:
+		surface = _water.call(&"sample_surface", query)
 	if surface.size() != float_point_markers.size():
 		return
 

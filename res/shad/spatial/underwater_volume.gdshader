@@ -11,7 +11,7 @@ uniform vec4 deep_color : source_color = vec4(0.01, 0.08, 0.13, 1.0);
 uniform vec3 absorption = vec3(0.55, 0.18, 0.06);
 uniform float density : hint_range(0.0, 0.25) = 0.035;
 uniform float max_distance = 170.0;
-uniform float shimmer_strength : hint_range(0.0, 0.05) = 0.008;
+uniform float shimmer_strength : hint_range(0.0, 0.05) = 0.002;
 
 void vertex() {
 	POSITION = vec4(VERTEX.xy, 1.0, 1.0);

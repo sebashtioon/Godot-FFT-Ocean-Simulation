@@ -9,6 +9,7 @@ global uniform vec4 foam_color : source_color;
 
 uniform float roughness : hint_range(0.0, 1.0) = 0.4;
 uniform float normal_strength : hint_range(0.0, 1.0) = 1.0; // Global normal strength
+uniform float camera_underwater_amount : hint_range(0.0, 1.0) = 0.0;
 
 group_uniforms cascade_data;
 uniform vec4 map_scales[MAX_CASCADES];               // Scales for displacement/normal maps. Packed: [uv scale, displacement scale, normal scale]
@@ -66,8 +67,8 @@ vec4 texture_bicubic(in sampler2DArray sampler, in vec3 uvw) {
 }
 
 void fragment() {
-	// Keep the underside visible from below, but hide folded back faces seen from above.
-	if (!FRONT_FACING && CAMERA_POSITION_WORLD.y > VERTEX.y) {
+	// Keep the underside visible underwater, but hide folded back faces from above.
+	if (!FRONT_FACING && camera_underwater_amount < 0.5) {
 		discard;
 	}
 

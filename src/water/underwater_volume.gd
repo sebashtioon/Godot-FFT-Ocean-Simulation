@@ -10,7 +10,7 @@ const UNDERWATER_SHADER := preload("res://res/shad/spatial/underwater_volume.gds
 @export var absorption := Vector3(0.55, 0.18, 0.06)
 @export_range(0.0, 0.25, 0.001) var density := 0.035
 @export_range(10.0, 500.0, 1.0) var max_distance := 170.0
-@export_range(0.0, 0.05, 0.001) var shimmer_strength := 0.008
+@export_range(0.0, 0.05, 0.001) var shimmer_strength := 0.002
 
 var _water : Node
 var _material := ShaderMaterial.new()
@@ -22,7 +22,9 @@ func _ready() -> void:
 	mesh = quad
 	cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	extra_cull_margin = 16384.0
+	sorting_offset = 4096.0
 	_material.shader = UNDERWATER_SHADER
+	_material.render_priority = 127
 	material_override = _material
 	visible = false
 	_find_water()
@@ -41,6 +43,7 @@ func _process(_delta : float) -> void:
 	visible = amount > 0.001
 	_material.set_shader_parameter(&"underwater_amount", amount)
 	_material.set_shader_parameter(&"camera_depth", maxf(depth, 0.0))
+	_update_water_material(amount)
 
 func _find_water() -> void:
 	_water = get_node_or_null(water_path) if water_path != NodePath() else null
@@ -69,3 +72,12 @@ func _update_material_static_params() -> void:
 	_material.set_shader_parameter(&"density", density)
 	_material.set_shader_parameter(&"max_distance", max_distance)
 	_material.set_shader_parameter(&"shimmer_strength", shimmer_strength)
+
+func _update_water_material(underwater_amount : float) -> void:
+	if not (_water is MeshInstance3D):
+		return
+
+	var water_mesh := _water as MeshInstance3D
+	var material := water_mesh.material_override
+	if material is ShaderMaterial:
+		(material as ShaderMaterial).set_shader_parameter(&"camera_underwater_amount", underwater_amount)

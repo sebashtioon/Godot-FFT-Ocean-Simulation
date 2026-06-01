@@ -168,9 +168,10 @@ func query_surface(world_xz : PackedVector2Array, map_scales : PackedVector4Arra
 	pipelines[&'wave_query'].call(context, compute_list, push)
 	context.compute_list_end()
 
-	# Blocking readback (simple, but will stall). For production, double-buffer + read a frame later.
-	context.submit()
-	context.sync()
+	# Blocking readback. simple, but it will stall :(  
+	# The main RenderingDevice is submitted by the engine; submit/sync are only valid on local devices
+	# force_sync() makes sure the render thread processes the RD commands before the CPU readback
+	RenderingServer.force_sync()
 
 	var raw : PackedByteArray = context.device.buffer_get_data(descriptors[&'wave_query_results'].rid)
 	var results := PackedVector4Array()
